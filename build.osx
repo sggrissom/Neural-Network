@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd bin
+
+IgnoredWarnings="-Wno-unused-function -Wno-unused-variable"
+clang -I~/sgg ../nn.cpp -Wall -Werror -O2 -DINTERNAL -DSLOW $IgnoredWarnings
