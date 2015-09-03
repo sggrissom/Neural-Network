@@ -1,6 +1,9 @@
 
 #include "../slib/slib.h"
 
+//NOTE(steven):Data[Layer][neuron]
+//Weights[Layer][Neuron][WeightsForPrevLayerNeuron]
+
 struct neural_network
 {
     u32 InputCount;
@@ -71,12 +74,10 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork)
     SeedArrayRandomly(NeuralNetwork->Weights, WeightArraySize);
 }
 
-#define NeuralNetworkData(nn, i, j) (*(i*nn->LayerCount + j))
-#define NeuralNetworkWeight(nn, i, j, k) (*(i*nn->LayerCount*nn-> + j*(*nn->LayerSizes) + k))
-
 internal void
 FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
 {
+    //NOTE(steven): assign input to first layer of NN
     *InputPoint = NeuralNetwork->Data;
     for(u32 InputIndex = 0;
         InputIndex < NeuralNetwork->InputCount;
@@ -84,6 +85,23 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
     {
         *InputPoint++ = *DataPoint++
     }
+
+
+    //NOTE(steven): for each neuron, it's value is equal to the sum of the previous layer's
+    //neuron values multiplied by their weight values, summed together (including a bias neuron).
+    //This value then has the sigmoid function applied to it.
+    r32 *DataPointer = NeuralNetwork->Data;
+    r32 *WeightsPointer = NeuralNetwork->Weights;
+
+    for(u32 WeightsIndex = 0;
+        WeightsIndex < NeuralNetwork->WeightCount;
+        ++WeightsIndex)
+    {
+        r32 NeuronWeights = WeightsPointer;
+        
+        WeightsPointer += 
+    }
+    
 
     for(u32 LayerIndex = 1;
         LayerIndex < NeuralNetwork->LayerCount;
@@ -98,10 +116,11 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
                 PrevLayerNeuronIndex < *(NeuralNetwork->LayerSizes + LayerIndex - 1);
                 ++PrevLayerNeuronIndex)
             {
-                sum += 
+                sum += ((*WeightsPointer++) * (*DataPointer++));
             }
-            sum += *(NeuralNetwork->Weights);
-            *NeuralNetwork->Data = Sigmoid(sum);
+            sum += *WeightsPointer++;
+            *(NeuralNetwork->Data + ) = Sigmoid(sum);
+            ++DataPointer;
         }
     }
 }
