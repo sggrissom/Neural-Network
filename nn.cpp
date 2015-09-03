@@ -1,5 +1,5 @@
 
-#include "../sgg/slib.h"
+#include "../slib/slib.h"
 
 struct neural_network
 {
@@ -46,7 +46,7 @@ PrintArray(r32 *Array, u32 ArraySize)
         ArrayIndex < ArraySize;
         ++ArrayIndex)
     {
-        printf("float %d: %f\n", ArrayIndex, *Array);
+        printf("float %d: %f\n", ArrayIndex, *(Array + ArrayIndex));
     }
 }
 
@@ -67,17 +67,43 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork)
 
     NeuralNetwork->Data = (r32*)malloc(sizeof(r32) * DataArraySize);
     NeuralNetwork->Weights = (r32*)malloc(sizeof(r32) * WeightArraySize);
-    SeedArrayRandomly(NeuralNetwork->Data, DataArraySize);
+    
     SeedArrayRandomly(NeuralNetwork->Weights, WeightArraySize);
-
-    PrintArray(NeuralNetwork->Data, DataArraySize);
-    PrintArray(NeuralNetwork->Weights, WeightArraySize);
 }
 
-internal r32 *
+#define NeuralNetworkData(nn, i, j) (*(i*nn->LayerCount + j))
+#define NeuralNetworkWeight(nn, i, j, k) (*(i*nn->LayerCount*nn-> + j*(*nn->LayerSizes) + k))
+
+internal void
 FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
 {
-    return 0;
+    *InputPoint = NeuralNetwork->Data;
+    for(u32 InputIndex = 0;
+        InputIndex < NeuralNetwork->InputCount;
+        ++InputIndex)
+    {
+        *InputPoint++ = *DataPoint++
+    }
+
+    for(u32 LayerIndex = 1;
+        LayerIndex < NeuralNetwork->LayerCount;
+        ++LayerIndex)
+    {
+        for(u32 NeuronIndex = 0;
+            NeuronIndex < *(NeuralNetwork->LayerSizes + LayerIndex);
+            ++NeuronIndex)
+        {
+            r32 sum = 0;
+            for(u32 PrevLayerNeuronIndex = 0;
+                PrevLayerNeuronIndex < *(NeuralNetwork->LayerSizes + LayerIndex - 1);
+                ++PrevLayerNeuronIndex)
+            {
+                sum += 
+            }
+            sum += *(NeuralNetwork->Weights);
+            *NeuralNetwork->Data = Sigmoid(sum);
+        }
+    }
 }
 
 internal void
@@ -89,52 +115,56 @@ s32 main()
 {
     srand((u32)time(0));
     
-    r32 TrainingData[] = {0,0,0,0,
-                         0,0,1,1,
-                         0,1,0,1,
-                         1,0,0,1,
-                         0,1,1,0,
-                         1,0,1,0,
-                         1,1,0,0,
-                         1,1,1,1,};
+    r32 TrainingData[] = {
+        0,0,0,0,
+        0,0,1,1,
+        0,1,0,1,
+        1,0,0,1,
+        0,1,1,0,
+        1,0,1,0,
+        1,1,0,0,
+        1,1,1,1,
+    };
     
-    r32 TestData[] = {0,0,0,
-                     0,0,1,
-                     0,1,0,
-                     1,0,0,
-                     0,1,1,
-                     1,0,1,
-                     1,1,0,
-                     1,1,1,};
+    r32 TestData[] = {
+        0,0,0,
+        0,0,1,
+        0,1,0,
+        1,0,0,
+        0,1,1,
+        1,0,1,
+        1,1,0,
+        1,1,1,
+    };
     
-    neural_network xor = {};
-    xor.InputCount = 3;
-    xor.OutputCount = 1;
+    neural_network NeuralNetwork = {};
+    NeuralNetwork.InputCount = 3;
+    NeuralNetwork.OutputCount = 1;
     
     u32 LayerSizes[] = {3,3,2,1};
-    xor.LayerSizes = LayerSizes;
-    xor.LayerCount = ArrayCount(LayerSizes);
+    NeuralNetwork.LayerSizes = LayerSizes;
+    NeuralNetwork.LayerCount = ArrayCount(LayerSizes);
 
-    xor.Beta = 0.3f;
-    xor.Alpha = 0.1f;
-    xor.Epsilon = 0.0001f;
+    NeuralNetwork.Beta = 0.3f;
+    NeuralNetwork.Alpha = 0.1f;
+    NeuralNetwork.Epsilon = 0.0001f;
 
-    xor.MaximumIterations = 2000000;
+    NeuralNetwork.MaximumIterations = 2000000;
 
-    Assert(ArrayCount(TrainingData) % (xor.InputCount + xor.OutputCount) == 0);
-    Assert(ArrayCount(TestData) % (xor.InputCount) == 0);
+    Assert(ArrayCount(TrainingData) % (NeuralNetwork.InputCount + NeuralNetwork.OutputCount) == 0);
+    Assert(ArrayCount(TestData) % (NeuralNetwork.InputCount) == 0);
 
-    u32 TrainingDataPointCount = ArrayCount(TrainingData) / (xor.InputCount + xor.OutputCount);
-    u32 TestDataPointCount = ArrayCount(TestData) / (xor.InputCount);
+    u32 TrainingDataPointCount = ArrayCount(TrainingData) / (NeuralNetwork.InputCount + NeuralNetwork.OutputCount);
+    u32 TestDataPointCount = ArrayCount(TestData) / (NeuralNetwork.InputCount);
 
-    InitializeNeuralNetwork(&xor);
+    InitializeNeuralNetwork(&NeuralNetwork);
 
     for(u32 IterationIndex = 0;
-        IterationIndex < xor.MaximumIterations;
+        IterationIndex < NeuralNetwork.MaximumIterations;
         ++IterationIndex)
     {
         r32 *TrainDataPoint = TrainingData + IterationIndex % TrainingDataPointCount;
-        FeedForward(&xor, TrainDataPoint);
+        FeedForward(&NeuralNetwork, TrainDataPoint);
         
     }
 
@@ -143,9 +173,9 @@ s32 main()
         ++TestIterationIndex)
     {
         r32 *TestDataPoint = TestData + TestIterationIndex % TestDataPointCount;
-        r32 *NeuralNetworkOutput = FeedForward(&xor, TestDataPoint);
+        r32 *NeuralNetworkOutput = FeedForward(&NeuralNetwork, TestDataPoint);
         for(u32 OutputIndex = 0;
-            OutputIndex < xor.OutputCount;
+            OutputIndex < NeuralNetwork.OutputCount;
             ++OutputIndex)
         {
             //r32 OutputValue = *(NeuralNetworkOutput + OutputIndex);
