@@ -14,8 +14,8 @@ struct neural_network
     r32 Beta;
     r32 Alpha;
     r32 Epsilon;
-    r32 *Data;
-    r32 *Weights;
+    r32 **Data;
+    r32 ***Weights;
 };
 
 #include <math.h>
@@ -53,76 +53,54 @@ PrintArray(r32 *Array, u32 ArraySize)
     }
 }
 
+#define LayerSize(nn, x) (*(nn->LayerSizes + x))
+
 internal void
 InitializeNeuralNetwork(neural_network *NeuralNetwork)
 {
     
     u32 DataArraySize = 0, WeightArraySize = 0, LayerSize = 0, PrevLayerSize = 0;
+
+    NeuralNetwork->Data = (r32 **) malloc(NeuralNetwork->LayerCount * sizeof(r32 *));
+    
     for(u32 LayerIndex = 0;
         LayerIndex < NeuralNetwork->LayerCount;
         ++LayerIndex)
     {
-        LayerSize = *(NeuralNetwork->LayerSizes + LayerIndex);
-        DataArraySize += LayerSize;
-        WeightArraySize += LayerSize * PrevLayerSize + PrevLayerSize;
-        PrevLayerSize = LayerSize;
+        *(NeuralNetwork->Data + LayerIndex) = (r32 *) malloc(sizeof(r32) * LayerSize(NeuralNetwork, LayerIndex));
     }
 
-    NeuralNetwork->Data = (r32*)malloc(sizeof(r32) * DataArraySize);
-    NeuralNetwork->Weights = (r32*)malloc(sizeof(r32) * WeightArraySize);
-    
-    SeedArrayRandomly(NeuralNetwork->Weights, WeightArraySize);
+    NeuralNetwork->Weights = (r32 ***) malloc(NeuralNetwork->LayerCount * sizeof(r32 **));
+
+    for(u32 LayerIndex = 0;
+        LayerIndex < NeuralNetwork->LayerCount;
+        ++LayerIndex)
+    {
+        r32 **LayerWeights = (r32 **) malloc(LayerSize(NeuralNetwork, LayerIndex) * sizeof(r32 *));
+        
+        for(u32 NeuronIndex = 0;
+            NeuronIndex < LayerSize(NeuralNetwork, LayerIndex);
+            ++NeuronIndex)
+        {
+            r32 *NeuronWeights = (r32 *) malloc((LayerSize(NeuralNetwork, LayerIndex) + 1) * sizeof(r32));
+            SeedArrayRandomly(NeuronWeights, LayerSize(NeuralNetwork, LayerIndex) + 1);
+            *(LayerWeights + NeuronIndex) = NeuronWeights;
+        }
+
+        *(NeuralNetwork->Weights + LayerIndex) = LayerWeights;
+    }
 }
 
 internal void
 FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
 {
     //NOTE(steven): assign input to first layer of NN
-    *InputPoint = NeuralNetwork->Data;
-    for(u32 InputIndex = 0;
-        InputIndex < NeuralNetwork->InputCount;
-        ++InputIndex)
-    {
-        *InputPoint++ = *DataPoint++
-    }
 
 
     //NOTE(steven): for each neuron, it's value is equal to the sum of the previous layer's
     //neuron values multiplied by their weight values, summed together (including a bias neuron).
     //This value then has the sigmoid function applied to it.
-    r32 *DataPointer = NeuralNetwork->Data;
-    r32 *WeightsPointer = NeuralNetwork->Weights;
-
-    for(u32 WeightsIndex = 0;
-        WeightsIndex < NeuralNetwork->WeightCount;
-        ++WeightsIndex)
-    {
-        r32 NeuronWeights = WeightsPointer;
-        
-        WeightsPointer += 
-    }
     
-
-    for(u32 LayerIndex = 1;
-        LayerIndex < NeuralNetwork->LayerCount;
-        ++LayerIndex)
-    {
-        for(u32 NeuronIndex = 0;
-            NeuronIndex < *(NeuralNetwork->LayerSizes + LayerIndex);
-            ++NeuronIndex)
-        {
-            r32 sum = 0;
-            for(u32 PrevLayerNeuronIndex = 0;
-                PrevLayerNeuronIndex < *(NeuralNetwork->LayerSizes + LayerIndex - 1);
-                ++PrevLayerNeuronIndex)
-            {
-                sum += ((*WeightsPointer++) * (*DataPointer++));
-            }
-            sum += *WeightsPointer++;
-            *(NeuralNetwork->Data + ) = Sigmoid(sum);
-            ++DataPointer;
-        }
-    }
 }
 
 internal void
@@ -192,7 +170,7 @@ s32 main()
         ++TestIterationIndex)
     {
         r32 *TestDataPoint = TestData + TestIterationIndex % TestDataPointCount;
-        r32 *NeuralNetworkOutput = FeedForward(&NeuralNetwork, TestDataPoint);
+        FeedForward(&NeuralNetwork, TestDataPoint);
         for(u32 OutputIndex = 0;
             OutputIndex < NeuralNetwork.OutputCount;
             ++OutputIndex)
