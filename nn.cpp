@@ -14,8 +14,8 @@ struct neural_network
     r32 Beta;
     r32 Alpha;
     r32 Epsilon;
-    r32 **Data;
-    r32 ***Weights;
+    r32 *Data;
+    r32 *Weights;
 };
 
 #include <math.h>
@@ -53,42 +53,50 @@ PrintArray(r32 *Array, u32 ArraySize)
     }
 }
 
-#define LayerSize(nn, x) (*(nn->LayerSizes + x))
+internal void
+test_interate_over_nn(neural_network *NeuralNetwork)
+{
+    r32 *LayerPointer = NeuralNetwork->Data;
+    
+    for(u32 LayerIndex = 0;
+        LayerIndex < NeuralNetwork->LayerCount;
+        ++LayerIndex)
+    {
+        u32 LayerSize = *(NeuralNetwork->LayerSizes + LayerIndex);
+
+        r32 *NeuronPointer = LayerPointer;
+        for(u32 NeuronIndex = 0;
+            NeuronIndex < LayerSize;
+            ++NeuronIndex)
+        {
+            *NeuronPointer++ = 0;
+        }
+        
+        LayerPointer += LayerSize;
+    }
+}
 
 internal void
 InitializeNeuralNetwork(neural_network *NeuralNetwork)
 {
-    
     u32 DataArraySize = 0, WeightArraySize = 0, LayerSize = 0, PrevLayerSize = 0;
-
-    NeuralNetwork->Data = (r32 **) malloc(NeuralNetwork->LayerCount * sizeof(r32 *));
-    
     for(u32 LayerIndex = 0;
         LayerIndex < NeuralNetwork->LayerCount;
         ++LayerIndex)
     {
-        *(NeuralNetwork->Data + LayerIndex) = (r32 *) malloc(sizeof(r32) * LayerSize(NeuralNetwork, LayerIndex));
+        LayerSize = *(NeuralNetwork->LayerSizes + LayerIndex);
+        DataArraySize += LayerSize;
+        WeightArraySize += LayerSize * PrevLayerSize + PrevLayerSize;
+        PrevLayerSize = LayerSize;
     }
 
-    NeuralNetwork->Weights = (r32 ***) malloc(NeuralNetwork->LayerCount * sizeof(r32 **));
+    NeuralNetwork->Data = (r32*)malloc(sizeof(r32) * DataArraySize);
+    NeuralNetwork->Weights = (r32*)malloc(sizeof(r32) * WeightArraySize);
+    test_interate_over_nn(NeuralNetwork);
+    SeedArrayRandomly(NeuralNetwork->Weights, WeightArraySize);
 
-    for(u32 LayerIndex = 0;
-        LayerIndex < NeuralNetwork->LayerCount;
-        ++LayerIndex)
-    {
-        r32 **LayerWeights = (r32 **) malloc(LayerSize(NeuralNetwork, LayerIndex) * sizeof(r32 *));
-        
-        for(u32 NeuronIndex = 0;
-            NeuronIndex < LayerSize(NeuralNetwork, LayerIndex);
-            ++NeuronIndex)
-        {
-            r32 *NeuronWeights = (r32 *) malloc((LayerSize(NeuralNetwork, LayerIndex) + 1) * sizeof(r32));
-            SeedArrayRandomly(NeuronWeights, LayerSize(NeuralNetwork, LayerIndex) + 1);
-            *(LayerWeights + NeuronIndex) = NeuronWeights;
-        }
-
-        *(NeuralNetwork->Weights + LayerIndex) = LayerWeights;
-    }
+    PrintArray(NeuralNetwork->Data, DataArraySize);
+    PrintArray(NeuralNetwork->Weights, WeightArraySize);
 }
 
 internal void
