@@ -102,13 +102,66 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork)
 internal void
 FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
 {
-    //NOTE(steven): assign input to first layer of NN
+    u32 const LayerCount = NeuralNetwork->LayerCount;
+    u32 LayerSizes[LayerCount];
 
+    for(u32 LayerIndex = 0;
+        LayerIndex < LayerCount;
+        ++LayerIndex)
+    {
+        LayerSizes[LayerIndex] = *(NeuralNetwork->LayerSizes + LayerIndex);
+    }
+
+    r32 *Data = NeuralNetwork->Data;
+    r32 *Input = DataPoint;
+    
+    for(u32 InputIndex = 0;
+        InputIndex < LayerSizes[0];
+        ++InputIndex)
+    {
+        *Data++ = *Input++;
+    }
+
+    r32 *WeightPointer = NeuralNetwork->Weights;
+    r32 *PrevNeuronPointer = NeuralNetwork->Data;
+
+    r32 *LayerPointer = NeuralNetwork->Data + LayerSizes[0];
+
+    u32 LayerSize = 0, PrevLayerSize = 0;
 
     //NOTE(steven): for each neuron, it's value is equal to the sum of the previous layer's
     //neuron values multiplied by their weight values, summed together (including a bias neuron).
     //This value then has the sigmoid function applied to it.
     
+    for(u32 LayerIndex = 1;
+        LayerIndex < NeuralNetwork->LayerCount;
+        ++LayerIndex)
+    {
+        LayerSize = LayerSizes[LayerIndex];
+        PrevLayerSize = LayerSizes[LayerIndex - 1];
+
+        r32 *NeuronPointer = LayerPointer;
+        for(u32 NeuronIndex = 0;
+            NeuronIndex < LayerSize;
+            ++NeuronIndex)
+        {
+            r32 sum = 0;
+
+            for(u32 PrevLayerNeuronIndex = 0;
+                PrevLayerNeuronIndex < PrevLayerSize;
+                ++PrevLayerNeuronIndex)
+            {
+                r32 PrevNeuronValue = *PrevNeuronPointer++;
+                r32 NeuronWeight = *WeightPointer++;
+                sum += PrevNeuronValue * NeuronWeight;
+            }
+            
+            *NeuronPointer++ = Sigmoid(sum);
+        }
+        
+        LayerPointer += LayerSize;
+        PrevNeuronPointer = LayerPointer;
+    }    
 }
 
 internal void
@@ -170,7 +223,7 @@ s32 main()
     {
         r32 *TrainDataPoint = TrainingData + IterationIndex % TrainingDataPointCount;
         FeedForward(&NeuralNetwork, TrainDataPoint);
-        
+        PrintArray(NeuralNetwork.Data, 9);
     }
 
     for(u32 TestIterationIndex = 0;
