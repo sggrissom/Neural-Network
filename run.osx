@@ -1,0 +1,8 @@
+
+pushd bin
+
+echo ---------------
+./a.out
+echo ---------------
+
+popd
