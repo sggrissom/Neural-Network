@@ -22,6 +22,7 @@ struct neural_network
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 
 internal r32
 Sigmoid(r32 X)
@@ -54,29 +55,6 @@ PrintArray(r32 *Array, u32 ArraySize)
 }
 
 internal void
-test_interate_over_nn(neural_network *NeuralNetwork)
-{
-    r32 *LayerPointer = NeuralNetwork->Data;
-    
-    for(u32 LayerIndex = 0;
-        LayerIndex < NeuralNetwork->LayerCount;
-        ++LayerIndex)
-    {
-        u32 LayerSize = *(NeuralNetwork->LayerSizes + LayerIndex);
-
-        r32 *NeuronPointer = LayerPointer;
-        for(u32 NeuronIndex = 0;
-            NeuronIndex < LayerSize;
-            ++NeuronIndex)
-        {
-            *NeuronPointer++ = 0;
-        }
-        
-        LayerPointer += LayerSize;
-    }
-}
-
-internal void
 InitializeNeuralNetwork(neural_network *NeuralNetwork)
 {
     u32 DataArraySize = 0, WeightArraySize = 0, LayerSize = 0, PrevLayerSize = 0;
@@ -91,8 +69,9 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork)
     }
 
     NeuralNetwork->Data = (r32*)malloc(sizeof(r32) * DataArraySize);
+    memset(NeuralNetwork->Data, 0, DataArraySize * sizeof(r32));
+    
     NeuralNetwork->Weights = (r32*)malloc(sizeof(r32) * WeightArraySize);
-    test_interate_over_nn(NeuralNetwork);
     SeedArrayRandomly(NeuralNetwork->Weights, WeightArraySize);
 
     PrintArray(NeuralNetwork->Data, DataArraySize);
@@ -240,7 +219,7 @@ s32 main()
     NeuralNetwork.Alpha = 0.1f;
     NeuralNetwork.Epsilon = 0.0001f;
 
-    NeuralNetwork.MaximumIterations = 2000000;
+    NeuralNetwork.MaximumIterations = 20;
 
     Assert(ArrayCount(TrainingData) % (NeuralNetwork.InputCount + NeuralNetwork.OutputCount) == 0);
     Assert(ArrayCount(TestData) % (NeuralNetwork.InputCount) == 0);
@@ -257,6 +236,8 @@ s32 main()
         r32 *TrainDataPoint = TrainingData + IterationIndex % TrainingDataPointCount;
         FeedForward(&NeuralNetwork, TrainDataPoint);
         PrintArray(NeuralNetwork.Data, 9);
+        r32 MSE = MeanSquareError(&NeuralNetwork, TrainDataPoint);
+        printf("mse: %f\n", MSE);
     }
 
     for(u32 TestIterationIndex = 0;
