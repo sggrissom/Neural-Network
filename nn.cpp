@@ -99,6 +99,35 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork)
     PrintArray(NeuralNetwork->Weights, WeightArraySize);
 }
 
+internal r32
+MeanSquareError(neural_network *NeuralNetwork, r32 *DataPoint)
+{
+    r32 MSE = 0;
+
+    u32 OutputLocation = 0;
+
+    for(u32 LayerIndex = 0;
+        LayerIndex < NeuralNetwork->LayerCount;
+        ++LayerIndex)
+    {
+        OutputLocation += *(NeuralNetwork->LayerSizes + LayerIndex);
+    }
+
+    r32 *Output = NeuralNetwork->Data + OutputLocation;
+
+    for(u32 OutputIndex = 0;
+        OutputIndex < NeuralNetwork->OutputCount;
+        ++OutputIndex)
+    {
+        r32 TargetValue = *(DataPoint + OutputIndex);
+        r32 OutputValue = *(Output + OutputIndex);
+        r32 Delta = TargetValue - OutputValue;
+        MSE += Delta * Delta;
+    }
+
+    return MSE * 0.5f;
+}
+
 internal void
 FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
 {
@@ -145,7 +174,7 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
             NeuronIndex < LayerSize;
             ++NeuronIndex)
         {
-            r32 sum = 0;
+            r32 Sum = 0;
 
             for(u32 PrevLayerNeuronIndex = 0;
                 PrevLayerNeuronIndex < PrevLayerSize;
@@ -153,10 +182,11 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
             {
                 r32 PrevNeuronValue = *PrevNeuronPointer++;
                 r32 NeuronWeight = *WeightPointer++;
-                sum += PrevNeuronValue * NeuronWeight;
+                Sum += PrevNeuronValue * NeuronWeight;
             }
             
-            *NeuronPointer++ = Sigmoid(sum);
+            Sum += *WeightPointer;
+            *NeuronPointer++ = Sigmoid(Sum);
         }
         
         LayerPointer += LayerSize;
@@ -167,6 +197,9 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
 internal void
 BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint)
 {
+    FeedForward(NeuralNetwork, DataPoint);
+
+    
 }
 
 s32 main()
