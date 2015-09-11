@@ -26,10 +26,42 @@ struct neural_network
 #include <time.h>
 #include <string.h>
 
+internal u32
+IndexNeuron(neural_network *NeuralNetwork, u32 Layer, u32 Neuron)
+{
+    u32 Index = 0;
+    for(u32 LayerIndex = 0;
+        LayerIndex < Layer;
+        ++LayerIndex)
+    {
+        Index += NeuralNetwork->LayerSizes[LayerIndex]
+    }
+
+    Index += Neuron;
+
+    return Index;
+}
+
+internal u32
+IndexWeight(neural_network *NeuralNetwork, u32 Layer, u32 SourceNeuron, u32 DestNeuron)
+{
+    u32 Index = 0;
+    for(u32 LayerIndex = 0;
+        LayerIndex < X;
+        ++LayerIndex)
+    {
+        Index += NeuralNetwork->LayerSizes[LayerIndex]
+    }
+
+    Index += Y;
+
+    return Index;
+}
+
 internal r32
 Sigmoid(r32 X)
 {
-    r32 Result = 1.0f/(1.0f + (r32)exp(-X));
+    r32 Result = 1.0f/(1.0f + exp(-X));
 
     Assert(Result < 1.0f && Result > 0);
 
@@ -109,8 +141,6 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork)
         PrevLayerSize = LayerSize;
     }
 
-    printf("ws: %d\n\n", WeightArraySize);
-
     NeuralNetwork->DataSize = DataArraySize;
     NeuralNetwork->WeightSize = WeightArraySize;
 
@@ -184,25 +214,23 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
             ++NeuronIndex)
         {
             r32 Sum = 0;
+            PrevNeuronPointer = LayerPointer - PrevLayerSize;
 
             for(u32 PrevLayerNeuronIndex = 0;
                 PrevLayerNeuronIndex < PrevLayerSize;
                 ++PrevLayerNeuronIndex)
             {
                 r32 PrevNeuronValue = *PrevNeuronPointer++;
-                printf("wp: %f\n", *WeightPointer);
                 r32 NeuronWeight = *WeightPointer++;
                 Sum += PrevNeuronValue * NeuronWeight;
             }
 
-            printf("wp: %f\n", *WeightPointer);
             Sum += *WeightPointer++;
-            printf("np: %f\n", *NeuronPointer);
+            r32 SigValue = Sigmoid(Sum);
             *NeuronPointer++ = Sigmoid(Sum);
         }
         
         LayerPointer += LayerSize;
-        PrevNeuronPointer = LayerPointer;
     }
 }
 
@@ -210,21 +238,82 @@ internal void
 BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint)
 {
     FeedForward(NeuralNetwork, DataPoint);
+    
+    u32 *LayerSizes = NeuralNetwork->LayerSizes;
 
     r32 *Delta = (r32 *)malloc(NeuralNetwork->DataSize * sizeof(r32));
     r32 *Output = GetNeuralNetworkOutput(NeuralNetwork);
+
+    r32 *DeltaPointer = Delta + NeuralNetwork->DataSize - NeuralNetwork->OutputCount;
     
-    //NOTE(steven): find delta
+    //NOTE(steven): find delta for output, then hidden layers
     for(u32 OutputIndex = 0;
         OutputIndex < NeuralNetwork->OutputCount;
         ++OutputIndex)
     {
-        Delta[OutputIndex] = DataPoint[OutputIndex] - Output[OutputIndex];
+        DeltaPointer[OutputIndex] = DataPoint[OutputIndex] - Output[OutputIndex];
+    }
+
+    r32 *WeightPointer = NeuralNetwork->Weights + NeuralNetwork->WeightSize;
+
+    r32 *NeuronPointer = Output;
+        
+    for(u32 HiddenLayerIndex = NeuralNetwork->LayerCount - 2;
+        HiddenLayerIndex > 0;
+        ++HiddenLayerIndex)
+    {
+        NeuronPointer -= LayerSizes[HiddenLayerIndex];
+        for(u32 NeuronIndex = 0;
+            NeuronIndex < LayerSizes[HiddenLayerIndex];
+            ++NeuronIndex)
+        {
+            DeltaPointer -= LayerSizes[HiddenLayerIndex];
+            WeightPointer -= (LayerSizes[HiddenLayerIndex] + 1);
+            r32 Sum = 0.0f;
+            for(u32 NextNeuronIndex = 0;
+                NextNeuronIndex < LayerSizes[HiddenLayerIndex+1];
+                ++NextNeuronIndex)
+            {
+                Sum += *(DeltaPointer + LayerSizes[HiddenLayerIndex] + NextNeuronIndex) *
+                    *WeightPointer++;
+            }
+
+            r32 NeuronValue = *NeuronPointer++;
+            *(DeltaPointer + NeuronIndex) = NeuronValue * (1 - NeuronValue) * Sum;
+        }
     }
     
     //NOTE(steven): apply momentum - does nothing if (Alpha == 0)
     
     //NOTE(steven): adjust weights
+    
+    r32 *LayerPointer = NeuralNetwork->Data + LayerSizes[0];
+    
+    for(u32 LayerIndex = 1;
+        LayerIndex < NeuralNetwork->LayerCount;
+        ++LayerIndex)
+    {
+        u32 LayerSize = LayerSizes[LayerIndex];
+        u32 PrevLayerSize = LayerSizes[LayerIndex - 1];
+
+        r32 *NeuronPointer = LayerPointer;
+        for(u32 NeuronIndex = 0;
+            NeuronIndex < LayerSize;
+            ++NeuronIndex)
+        {
+            for(u32 PrevLayerNeuronIndex = 0;
+                PrevLayerNeuronIndex < PrevLayerSize;
+                ++PrevLayerNeuronIndex)
+            {
+                r32 WeightAdjustment = NeuralNetwork->Beta * *Delta++ * Output[PrevLayerNeuronIndex];
+                *WeightPointer++ = WeightAdjustment;
+            }
+
+            *WeightPointer++ = NeuralNetwork->Beta * *Delta++;
+        }
+        
+        LayerPointer += LayerSize;
+    }    
 
     free(Delta);
 }
@@ -273,11 +362,13 @@ s32 main()
         IterationIndex < NeuralNetwork.MaximumIterations;
         ++IterationIndex)
     {
-        r32 *TrainDataPoint = TrainingData + (IterationIndex % TrainingDataPointCount);
-        FeedForward(&NeuralNetwork, TrainDataPoint);
+        r32 *TrainDataPoint = TrainingData +
+            ((IterationIndex % TrainingDataPointCount) *
+             (NeuralNetwork.InputCount + NeuralNetwork.OutputCount));
+
+        BackPropogate(&NeuralNetwork, TrainDataPoint);
         PrintNeuralNetwork(&NeuralNetwork);
         r32 MSE = MeanSquareError(&NeuralNetwork, TrainDataPoint);
-        printf("mse: %f %f\n", MSE, *TrainDataPoint);
         
         //if(MSE < NeuralNetwork.Epsilon) break;
     }
