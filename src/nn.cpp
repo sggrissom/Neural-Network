@@ -1,5 +1,5 @@
 
-#include "../slib/slib.h"
+#include <slib.h>
 
 //NOTE(steven):Data[Layer][neuron]
 //Weights[Layer][Neuron][WeightsForPrevLayerNeuron]
@@ -193,7 +193,7 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork)
     NeuralNetwork->WeightSize = WeightArraySize;
 
     NeuralNetwork->Data = (r32*)malloc(sizeof(r32) * DataArraySize);
-    memset(NeuralNetwork->Data, 0, DataArraySize * sizeof(r32));
+    SeedArrayRandomly(NeuralNetwork->Data, DataArraySize);
     
     NeuralNetwork->Weights = (r32*)malloc(sizeof(r32) * WeightArraySize);
     SeedArrayRandomly(NeuralNetwork->Weights, WeightArraySize);
@@ -363,10 +363,10 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint)
                 r32 WeightAdjustment = (NeuralNetwork->Beta *
                                         *DeltaPointer *
                                         PrevNeuronValue);
-                *WeightPointer++ = WeightAdjustment;
+                *WeightPointer++ += WeightAdjustment;
             }
 
-            *WeightPointer++ = NeuralNetwork->Beta * *DeltaPointer++;
+            *WeightPointer++ += NeuralNetwork->Beta * *DeltaPointer++;
         }
         
         LayerPointer += LayerSize;
@@ -380,24 +380,32 @@ s32 main()
     srand(0);
     
     r32 TrainingData[] = {
-        0,0,0,
-        0,1,1,
-        1,0,1,
-        1,1,0,
+        0,0,0,0,
+        0,0,1,1,
+        0,1,0,1,
+        0,1,1,0,
+        1,0,0,1,
+        1,0,1,0,
+        1,1,0,0,
+        1,1,1,1,
     };
     
     r32 TestData[] = {
-        0,0,
-        0,1,
-        1,0,
-        1,1,
+        0,0,0,
+        0,0,1,
+        0,1,0,
+        0,1,1,
+        1,0,0,
+        1,0,1,
+        1,1,0,
+        1,1,1,
     };
     
     neural_network NeuralNetwork = {};
-    NeuralNetwork.InputCount = 2;
+    NeuralNetwork.InputCount = 3;
     NeuralNetwork.OutputCount = 1;
     
-    u32 LayerSizes[] = {2,2,1};
+    u32 LayerSizes[] = {3,3,2,1};
     NeuralNetwork.LayerSizes = LayerSizes;
     NeuralNetwork.LayerCount = ArrayCount(LayerSizes);
 
@@ -405,7 +413,7 @@ s32 main()
     NeuralNetwork.Alpha = 0.1f;
     NeuralNetwork.Epsilon = 0.0001f;
 
-    NeuralNetwork.MaximumIterations = 5000000;
+    NeuralNetwork.MaximumIterations = 50000;
 
     Assert(ArrayCount(TrainingData) % (NeuralNetwork.InputCount + NeuralNetwork.OutputCount) == 0);
     Assert(ArrayCount(TestData) % (NeuralNetwork.InputCount) == 0);
@@ -434,7 +442,9 @@ s32 main()
         TestIterationIndex < TestDataPointCount;
         ++TestIterationIndex)
     {
-        r32 *TestDataPoint = TestData + TestIterationIndex % TestDataPointCount;
+        r32 *TestDataPoint = TestData +
+            ((TestIterationIndex % TestDataPointCount) *
+             NeuralNetwork.InputCount);
         FeedForward(&NeuralNetwork, TestDataPoint);
         r32 *Output = NeuralNetwork.Data + NeuralNetwork.DataSize - NeuralNetwork.OutputCount;
         for(u32 OutputIndex = 0;
