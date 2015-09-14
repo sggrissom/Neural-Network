@@ -197,9 +197,6 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork)
     
     NeuralNetwork->Weights = (r32*)malloc(sizeof(r32) * WeightArraySize);
     SeedArrayRandomly(NeuralNetwork->Weights, WeightArraySize);
-
-    PrintArray(NeuralNetwork->Data, DataArraySize);
-    PrintArray(NeuralNetwork->Weights, WeightArraySize);
 }
 
 #define GetNeuralNetworkOutput(nn) (nn->Data + nn->DataSize - nn->OutputCount)
@@ -294,7 +291,7 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint)
                                  NeuralNetwork->InputCount -
                                  NeuralNetwork->OutputCount);
 
-    PrintNeuralNetwork(NeuralNetwork);
+    // PrintNeuralNetwork(NeuralNetwork);
     
     //NOTE(steven): find delta for output, then hidden layers
     for(u32 OutputIndex = 0;
@@ -340,6 +337,7 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint)
     
     r32 *LayerPointer = NeuralNetwork->Data + LayerSizes[0];
     DeltaPointer = Delta;
+    WeightPointer = NeuralNetwork->Weights;
 
     r32 *PrevNeuronPointer = NeuralNetwork->Data;
     
@@ -363,7 +361,7 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint)
             {
                 r32 PrevNeuronValue = *PrevNeuronPointer++;
                 r32 WeightAdjustment = (NeuralNetwork->Beta *
-                                        *DeltaPointer++ *
+                                        *DeltaPointer *
                                         PrevNeuronValue);
                 *WeightPointer++ = WeightAdjustment;
             }
@@ -407,7 +405,7 @@ s32 main()
     NeuralNetwork.Alpha = 0.1f;
     NeuralNetwork.Epsilon = 0.0001f;
 
-    NeuralNetwork.MaximumIterations = 5;
+    NeuralNetwork.MaximumIterations = 5000000;
 
     Assert(ArrayCount(TrainingData) % (NeuralNetwork.InputCount + NeuralNetwork.OutputCount) == 0);
     Assert(ArrayCount(TestData) % (NeuralNetwork.InputCount) == 0);
@@ -426,7 +424,7 @@ s32 main()
              (NeuralNetwork.InputCount + NeuralNetwork.OutputCount));
 
         BackPropogate(&NeuralNetwork, TrainDataPoint);
-        PrintWeights(&NeuralNetwork);
+        //PrintWeights(&NeuralNetwork);
         r32 MSE = MeanSquareError(&NeuralNetwork, TrainDataPoint);
         
         //if(MSE < NeuralNetwork.Epsilon) break;
@@ -444,6 +442,8 @@ s32 main()
             ++OutputIndex)
         {
             r32 OutputValue = *(Output + OutputIndex);
+            PrintArray(TestDataPoint, NeuralNetwork.InputCount);
+            printf("ans: %f\n", OutputValue);
         }
     }
     
