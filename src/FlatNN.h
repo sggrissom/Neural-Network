@@ -340,3 +340,85 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint)
 
     free(Delta);
 }
+
+internal void
+ShowResults(neural_network *NeuralNetwork, r32 *TestDataPoint, u32 TestIterationIndex)
+{
+    char *SuccessMsg = "Correct!";
+    char *FailMsg = "Fail!";
+    
+    r32 *Output = GetNeuralNetworkOutput(NeuralNetwork);
+    for(u32 OutputIndex = 0;
+        OutputIndex < NeuralNetwork->OutputCount;
+        ++OutputIndex)
+    {
+        r32 OutputValue = *(Output + OutputIndex);
+        b32 Result = (b32)(OutputValue + 0.5f);
+        u32 Answer = (u32)(*(TestDataPoint + NeuralNetwork->InputCount + OutputIndex) + 0.5f);
+        char *Msg = (Result == Answer) ? SuccessMsg : FailMsg;
+        printf("%s result: %d -- answer: %d\n\n", Msg, Result, Answer);
+            
+    }
+}
+
+internal void
+FlatNN()
+{
+    srand(0);
+    
+    r32 TrainingData[] = {
+        0,0,0,0,
+        0,0,1,1,
+        0,1,0,1,
+        0,1,1,0,
+        1,0,0,1,
+        1,0,1,0,
+        1,1,0,0,
+        1,1,1,1,
+    };
+    
+    neural_network NeuralNetwork = {};
+    NeuralNetwork.InputCount = 3;
+    NeuralNetwork.OutputCount = 1;
+    
+    u32 LayerSizes[] = {3,3,2,1};
+    NeuralNetwork.LayerSizes = LayerSizes;
+    NeuralNetwork.LayerCount = ArrayCount(LayerSizes);
+
+    NeuralNetwork.Beta = 0.3f;
+    NeuralNetwork.Alpha = 0.1f;
+    NeuralNetwork.Epsilon = 0.0001f;
+
+    NeuralNetwork.MaximumIterations = 500000;
+
+    Assert(ArrayCount(TrainingData) % (NeuralNetwork.InputCount + NeuralNetwork.OutputCount) == 0);
+
+    u32 TrainingDataPointCount = ArrayCount(TrainingData) / (NeuralNetwork.InputCount + NeuralNetwork.OutputCount);
+
+    InitializeNeuralNetwork(&NeuralNetwork);
+
+    for(u32 IterationIndex = 0;
+        IterationIndex < NeuralNetwork.MaximumIterations;
+        ++IterationIndex)
+    {
+        r32 *TrainDataPoint = TrainingData +
+            ((IterationIndex % TrainingDataPointCount) *
+             (NeuralNetwork.InputCount + NeuralNetwork.OutputCount));
+
+        BackPropogate(&NeuralNetwork, TrainDataPoint);
+        r32 MSE = MeanSquareError(&NeuralNetwork, TrainDataPoint);
+        
+        //if(MSE < NeuralNetwork.Epsilon) break;
+    }
+
+    for(u32 TestIterationIndex = 0;
+        TestIterationIndex < TrainingDataPointCount;
+        ++TestIterationIndex)
+    {
+        r32 *TestDataPoint = TrainingData +
+            ((TestIterationIndex % TrainingDataPointCount) *
+             NeuralNetwork.InputCount + NeuralNetwork.OutputCount);
+        FeedForward(&NeuralNetwork, TestDataPoint);
+        ShowResults(&NeuralNetwork, TestDataPoint, TestIterationIndex);
+    }
+}
