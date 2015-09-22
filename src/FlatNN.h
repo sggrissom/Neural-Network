@@ -235,7 +235,6 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
             }
 
             Sum += *WeightPointer++;
-            r32 SigValue = Sigmoid(Sum);
             *NeuronPointer++ = Sigmoid(Sum);
         }
         
@@ -367,21 +366,17 @@ FlatNN()
     srand(0);
     
     r32 TrainingData[] = {
-        0,0,0,0,
-        0,0,1,1,
-        0,1,0,1,
-        0,1,1,0,
-        1,0,0,1,
-        1,0,1,0,
-        1,1,0,0,
-        1,1,1,1,
+        0,0,0,
+        0,1,1,
+        1,0,1,
+        1,1,0,
     };
     
     neural_network NeuralNetwork = {};
-    NeuralNetwork.InputCount = 3;
+    NeuralNetwork.InputCount = 2;
     NeuralNetwork.OutputCount = 1;
     
-    u32 LayerSizes[] = {3,3,2,1};
+    u32 LayerSizes[] = {2,3,1};
     NeuralNetwork.LayerSizes = LayerSizes;
     NeuralNetwork.LayerCount = ArrayCount(LayerSizes);
 

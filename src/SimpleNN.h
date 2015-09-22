@@ -254,7 +254,8 @@ void CBackProp::bpgt(r32 *in,r32 *tgt)
 	}
 
 	//	apply momentum ( does nothing if alpha=0 )
-	for(i=1;i<numl;i++){
+/*
+    for(i=1;i<numl;i++){
 		for(int j=0;j<lsize[i];j++){
 			for(int k=0;k<lsize[i-1];k++){
 				weight[i][j][k]+=alpha*prevDwt[i][j][k];
@@ -262,16 +263,17 @@ void CBackProp::bpgt(r32 *in,r32 *tgt)
 			weight[i][j][lsize[i-1]]+=alpha*prevDwt[i][j][lsize[i-1]];
 		}
 	}
+*/
 
 	//	adjust weights usng steepest descent	
 	for(i=1;i<numl;i++){
 		for(int j=0;j<lsize[i];j++){
 			for(int k=0;k<lsize[i-1];k++){
-				prevDwt[i][j][k]=beta*delta[i][j]*out[i-1][k];
-				weight[i][j][k]+=prevDwt[i][j][k];
+				//prevDwt[i][j][k]=beta*delta[i][j]*out[i-1][k];
+				weight[i][j][k]+=beta*delta[i][j]*out[i-1][k];//prevDwt[i][j][k];
 			}
-			prevDwt[i][j][lsize[i-1]]=beta*delta[i][j];
-			weight[i][j][lsize[i-1]]+=prevDwt[i][j][lsize[i-1]];
+			//prevDwt[i][j][lsize[i-1]]=beta*delta[i][j];
+			weight[i][j][lsize[i-1]]+=beta*delta[i][j];//prevDwt[i][j][lsize[i-1]];
 		}
 	}
 }
@@ -280,6 +282,7 @@ void CBackProp::bpgt(r32 *in,r32 *tgt)
 internal void
 SimpleNN()
 {
+/*
 	// prepare XOR traing data
 	r32 data[][4]={
         0,	0,	0,	0,
@@ -295,7 +298,17 @@ SimpleNN()
 	// the first layer is input layer i.e. simply holder for the input parameters
 	// and has to be the same size as the no of input parameters, in out example 3
 	u32 numLayers = 4, lSz[4] = {3,3,2,1};
+ */
 
+    r32 data[][3]={
+        0,0,0,
+        0,1,1,
+        1,0,1,
+        1,1,0,
+    };
+
+    u32 numLayers = 3;
+    u32 lSz[3] = {2,3,1};
 	
 	// Learing rate - beta
 	// momentum - alpha
@@ -304,7 +317,7 @@ SimpleNN()
 
 	
 	// maximum no of iterations during training
-	u32 num_iter = 2000000;
+	u32 num_iter = 500000;
 
 	
 	// Creating the net
@@ -312,13 +325,13 @@ SimpleNN()
 	
 	for (u32 i=0; i<num_iter ; i++)
 	{
-		bp->bpgt(data[i%8], &data[i%8][3]);
+		bp->bpgt(data[i%4], &data[i%4][2]);
 	}
 
-	for (u32 i = 0 ; i < 8 ; i++ )
+	for (u32 i = 0 ; i < 200 ; i++ )
 	{
-		bp->ffwd(data[i]);
-        u32 output = (u32)(data[i%8][3]);
+		bp->ffwd(data[i%4]);
+        u32 output = (u32)(data[i%4][2]);
         u32 rounded = (u32)(bp->Out(0) + 0.5f);
         if(output==rounded)
         {
