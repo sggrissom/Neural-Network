@@ -1,4 +1,4 @@
-#if !defined(SIMPLENN_H)
+#if !defined(TRANSFORMNN_H)
 /* ========================================================================
    $File: $
    $Date: $
@@ -281,26 +281,8 @@ void CBackProp::bpgt(r32 *in,r32 *tgt)
 
 
 internal void
-SimpleNN()
+TransformNN()
 {
-/*
-	// prepare XOR traing data
-	r32 data[][4]={
-        0,	0,	0,	0,
-        0,	0,	1,	1,
-        0,	1,	0,	1,
-        0,	1,	1,	0,
-        1,	0,	0,	1,
-        1,	0,	1,	0,
-        1,	1,	0,	0,
-        1,	1,	1,	1 };
-
-	// defining a net with 4 layers having 3,3,3, and 1 neuron respectively,
-	// the first layer is input layer i.e. simply holder for the input parameters
-	// and has to be the same size as the no of input parameters, in out example 3
-	u32 numLayers = 4, lSz[4] = {3,3,2,1};
- */
-
     r32 data[][3]={
         {0,0,0,},
         {0,1,1,},
@@ -316,10 +298,8 @@ SimpleNN()
 	// Threshhold - thresh (value of target mse, training stops once it is achieved)
 	r32 beta = 0.3f, alpha = 0.1f, Thresh =  0.00001f;
 
-	
 	// maximum no of iterations during training
 	u32 num_iter = 500000;
-
 	
 	// Creating the net
 	CBackProp *bp = new CBackProp(numLayers, (int *)lSz, beta, alpha);
@@ -345,5 +325,5 @@ SimpleNN()
 	}
 }
 
-#define SIMPLENN_H
+#define TRANSFORMNN_H
 #endif

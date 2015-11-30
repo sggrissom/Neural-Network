@@ -1,13 +1,15 @@
 
-#include <slib.h>
+#include "../../slib/slib.h"
 
-#include "FlatNN.h"
-#include "SimpleNN.h"
+//#include "FlatNN.h"
+//#include "SimpleNN.h"
+#include "transformNN.h"
 
 s32 main()
 {
 //    FlatNN();
-    SimpleNN();
+//    SimpleNN();
+    TransformNN();
 
     return 1;
 }

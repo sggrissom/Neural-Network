@@ -6,4 +6,4 @@ fi
 cd bin
 
 IgnoredWarnings="-Wno-unused-function -Wno-unused-variable"
-clang ../nn.cpp -Wall -Werror -O2 -DINTERNAL -DSLOW $IgnoredWarnings
+clang -I~/slib -lstdc++ ../src/nn.cpp -Wall -Werror -O2 -DINTERNAL -DSLOW $IgnoredWarnings

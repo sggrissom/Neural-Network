@@ -11,7 +11,6 @@
 
 #include <time.h>
 #include <stdlib.h>
-#include <new>
 
 class CBackProp{
 
