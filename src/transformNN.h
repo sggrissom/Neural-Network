@@ -64,7 +64,7 @@ public:
 	r32 mse(r32 *tgt) const;	
 	
 //	returns i'th output of the net
-	r32 Out(int i) const;j
+	r32 Out(int i) const;
 };
 
 
@@ -104,10 +104,10 @@ CBackProp::CBackProp(int nl,int *sz,r32 b,r32 a):beta(b)
 	//	allocate memory for weights
 	weight = new r32[WeightCount];
 
-	for(i=1;i<LayerCount;i++){
+	for(u32 i=1;i<LayerCount;i++){
 		weight[i]=new r32*[LayerCounts[i]];
 	}
-	for(i=1;i<LayerCount;i++){
+	for(u32 i=1;i<LayerCount;i++){
 		for(int j=0;j<LayerCounts[i];j++){
 			weight[i][j]=new r32[LayerCounts[i-1]+1];
 		}
@@ -116,11 +116,11 @@ CBackProp::CBackProp(int nl,int *sz,r32 b,r32 a):beta(b)
 	//	allocate memory for previous weights
 	prevDwt = new r32**[LayerCount];
 
-	for(i=1;i<LayerCount;i++){
+	for(u32 i=1;i<LayerCount;i++){
 		prevDwt[i]=new r32*[LayerCounts[i]];
 
 	}
-	for(i=1;i<LayerCount;i++){
+	for(u32 i=1;i<LayerCount;i++){
 		for(int j=0;j<LayerCounts[i];j++){
 			prevDwt[i][j]=new r32[LayerCounts[i-1]+1];
 		}
@@ -128,13 +128,13 @@ CBackProp::CBackProp(int nl,int *sz,r32 b,r32 a):beta(b)
 
 	//	seed and assign random weights
 	srand((unsigned)(time(NULL)));
-	for(i=1;i<LayerCount;i++)
+	for(u32 i=1;i<LayerCount;i++)
 		for(int j=0;j<LayerCounts[i];j++)
 			for(int k=0;k<LayerCounts[i-1]+1;k++)
 				weight[i][j][k]=(r32)(rand())/(RAND_MAX/2) - 1;//32767
 
 	//	initialize previous weights to 0 for first iteration
-	for(i=1;i<LayerCount;i++)
+	for(u32 i=1;i<LayerCount;i++)
 		for(int j=0;j<LayerCounts[i];j++)
 			for(int k=0;k<LayerCounts[i-1]+1;k++)
 				prevDwt[i][j][k]=(r32)0.0;

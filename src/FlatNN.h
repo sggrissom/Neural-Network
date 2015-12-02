@@ -1,24 +1,6 @@
 
-#include <slib.h>
-
 //NOTE(steven):Data[Layer][neuron]
 //Weights[Layer][Neuron][WeightsForPrevLayerNeuron]
-
-struct neural_network
-{
-    flat_2d_array *Data;
-    flat_2d_array *Delta;
-    flat_2d_array *Weights;
-    
-    u32 InputCount;
-    u32 OutputCount;
-    u32 *LayerSizes;
-    u32 LayerCount;
-    u32 MaximumIterations;
-    r32 Beta;
-    r32 Alpha;
-    r32 Epsilon;
-};
 
 #include <math.h>
 #include <stdlib.h>
@@ -47,16 +29,33 @@ SeedArrayRandomly(r32 *Array, u32 ArraySize)
 #else
         r32 RandomNumber = (r32)ArrayIndex;
 #endif
-        *(Array + ArrayIndex) = RandomNumber;
+        Array[ArrayIndex] = RandomNumber;
     }
 }
 
 struct flat_2d_array
 {
-    type *Array;
-    u32 *Rowptr;
+    r32 *Array;
+    u32 *RowPointer;
     u32 MemberCount;
     u32 RowCount;
+};
+
+struct neural_network
+{   
+    u32 InputCount;
+    u32 OutputCount;
+    u32 *LayerSizes;
+    u32 LayerCount;
+    u32 MaximumIterations;
+    r32 Beta;
+    r32 Alpha;
+    r32 Epsilon;
+    
+    flat_2d_array *Data;
+    flat_2d_array *Delta;
+    flat_2d_array *Weights;
+    flat_2d_array *PreviousWeights;
 };
 
 internal void
@@ -79,12 +78,61 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork,
     NeuralNetwork->Epsilon = Epsilon;
     NeuralNetwork->MaximumIterations = MaximumIterations;
 
+	u32 NeuronCount = 0;
+
+    NeuralNetwork->Data->RowCount = LayerCount;
+    NeuralNetwork->Delta->RowCount = LayerCount;
     
+    u32 *RowPointer = (u32 *)malloc(LayerCount * sizeof(r32));
+	for (u32 i = 0;
+         i < LayerCount;
+         i++)
+	{
+	    RowPointer[i] = NeuronCount;
+		NeuronCount += LayerSizes[i];
+	}
+
+    NeuralNetwork->Data->RowPointer = RowPointer;
+    NeuralNetwork->Delta->RowPointer = RowPointer;
+
+    NeuralNetwork->Data->MemberCount = NeuronCount;
+    NeuralNetwork->Delta->MemberCount = NeuronCount;
+
+    NeuralNetwork->Data->Array = (r32 *)malloc(NeuronCount * sizeof(r32));
+    NeuralNetwork->Delta->Array = (r32 *)malloc(NeuronCount * sizeof(r32));
+
+    SeedArrayRandomly(NeuralNetwork->Data->Array, NeuronCount);
+    SeedArrayRandomly(NeuralNetwork->Delta->Array, NeuronCount);
+
+    u32 WeightCount = 0;
+
+    RowPointer = (u32 *)malloc((LayerCount + 1) * sizeof(r32));
+	RowPointer[0] = 0;
+	for (u32 i=1;
+         i < LayerCount;
+         ++i)
+	{
+        RowPointer[i] = WeightCount;
+		WeightCount += LayerSizes[i]*(LayerSizes[i-1]+1);
+	}
+
+    NeuralNetwork->Weights->RowPointer = RowPointer;
+    NeuralNetwork->PreviousWeights->RowPointer = RowPointer;
+
+    NeuralNetwork->Weights->MemberCount = WeightCount;
+    NeuralNetwork->PreviousWeights->MemberCount = WeightCount;
+
+    NeuralNetwork->Weights->Array = (r32 *)malloc(WeightCount * sizeof(r32));
+    NeuralNetwork->PreviousWeights->Array = (r32 *)malloc(WeightCount * sizeof(r32));
+
+    SeedArrayRandomly(NeuralNetwork->Weights->Array, WeightCount);
+    SeedArrayRandomly(NeuralNetwork->PreviousWeights->Array, WeightCount);
 }
 
 internal r32
 MeanSquareError(neural_network *NeuralNetwork, r32 *DataPoint)
 {
+    return 0;
 }
 
 internal void
@@ -98,30 +146,26 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint)
 }
 
 internal void
+ShowResults(neural_network *NeuralNetwork, r32 *TestDataPoint, u32 TestIterationIndex)
+{
+}
+
+internal void
 FlatNN()
 {
     srand(0);
     
-    r32 TrainingData[] = {
-        0,0,0,
-        0,1,1,
-        1,0,1,
-        1,1,0,
-    };
-    
     neural_network NeuralNetwork = {};
 
-    #define INPUTCOUNT 2
-    #define OUTPUTCOUNT 1
-#define LAYERSIZES {2,3,1}
-    #define BETA 0.3f
-    #define ALPHA 0.1f
-    #define EPSILON 0.0001f
-    #define MAXITERATIONS 500000
+    u32 LayerSizes[] = LAYERSIZES;
+
+    printf("before init\n");
 
     InitializeNeuralNetwork(&NeuralNetwork,
-                            INPUTCOUNT, OUTPUTCOUNT, LAYERSIZES, ArrayCount(LAYERSIZES),
+                            INPUTCOUNT, OUTPUTCOUNT, LayerSizes, ArrayCount(LayerSizes),
                             BETA, ALPHA, EPSILON, MAXITERATIONS);
+    
+    printf("after init\n");
         
     Assert(ArrayCount(TrainingData) % (NeuralNetwork.InputCount + NeuralNetwork.OutputCount) == 0);
 
