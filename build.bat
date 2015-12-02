@@ -17,6 +17,6 @@ IF %release%==1 (set CompilerFlags= %ReleaseCompilerFlags%)
 IF NOT EXIST bin mkdir bin
 pushd bin
 
-cl %CompilerFlags% ..\src\nn.cpp /link %CommonLinkerFlags%
+cl -Iw:\slib %CompilerFlags% ..\src\nn.cpp /link %CommonLinkerFlags%
 
 popd

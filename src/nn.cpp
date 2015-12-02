@@ -1,5 +1,5 @@
 
-#include "../../slib/slib.h"
+#include <slib.h>
 
 #define INPUTCOUNT 2
 #define OUTPUTCOUNT 1

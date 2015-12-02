@@ -11,7 +11,7 @@
 internal r32
 Sigmoid(r32 X)
 {
-    r32 Result = 1.0f/(1.0f + exp(-X));
+    r32 Result = (r32)(1.0f/(1.0f + exp(-X)));
     Assert(Result < 1.0f && Result > 0);
 
     return Result;
@@ -78,10 +78,15 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork,
     NeuralNetwork->Epsilon = Epsilon;
     NeuralNetwork->MaximumIterations = MaximumIterations;
 
+    flat_2d_array *Data = (flat_2d_array *)malloc(sizeof(flat_2d_array));
+    flat_2d_array *Delta = (flat_2d_array *)malloc(sizeof(flat_2d_array));
+    flat_2d_array *Weights = (flat_2d_array *)malloc(sizeof(flat_2d_array));
+    flat_2d_array *PreviousWeights = (flat_2d_array *)malloc(sizeof(flat_2d_array));
+    
 	u32 NeuronCount = 0;
 
-    NeuralNetwork->Data->RowCount = LayerCount;
-    NeuralNetwork->Delta->RowCount = LayerCount;
+    Data->RowCount = LayerCount;
+    Delta->RowCount = LayerCount;
     
     u32 *RowPointer = (u32 *)malloc(LayerCount * sizeof(r32));
 	for (u32 i = 0;
@@ -92,17 +97,17 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork,
 		NeuronCount += LayerSizes[i];
 	}
 
-    NeuralNetwork->Data->RowPointer = RowPointer;
-    NeuralNetwork->Delta->RowPointer = RowPointer;
+    Data->RowPointer = RowPointer;
+    Delta->RowPointer = RowPointer;
 
-    NeuralNetwork->Data->MemberCount = NeuronCount;
-    NeuralNetwork->Delta->MemberCount = NeuronCount;
+    Data->MemberCount = NeuronCount;
+    Delta->MemberCount = NeuronCount;
 
-    NeuralNetwork->Data->Array = (r32 *)malloc(NeuronCount * sizeof(r32));
-    NeuralNetwork->Delta->Array = (r32 *)malloc(NeuronCount * sizeof(r32));
+    Data->Array = (r32 *)malloc(NeuronCount * sizeof(r32));
+    Delta->Array = (r32 *)malloc(NeuronCount * sizeof(r32));
 
-    SeedArrayRandomly(NeuralNetwork->Data->Array, NeuronCount);
-    SeedArrayRandomly(NeuralNetwork->Delta->Array, NeuronCount);
+    SeedArrayRandomly(Data->Array, NeuronCount);
+    SeedArrayRandomly(Delta->Array, NeuronCount);
 
     u32 WeightCount = 0;
 
@@ -116,17 +121,22 @@ InitializeNeuralNetwork(neural_network *NeuralNetwork,
 		WeightCount += LayerSizes[i]*(LayerSizes[i-1]+1);
 	}
 
-    NeuralNetwork->Weights->RowPointer = RowPointer;
-    NeuralNetwork->PreviousWeights->RowPointer = RowPointer;
+    Weights->RowPointer = RowPointer;
+    PreviousWeights->RowPointer = RowPointer;
 
-    NeuralNetwork->Weights->MemberCount = WeightCount;
-    NeuralNetwork->PreviousWeights->MemberCount = WeightCount;
+    Weights->MemberCount = WeightCount;
+    PreviousWeights->MemberCount = WeightCount;
 
-    NeuralNetwork->Weights->Array = (r32 *)malloc(WeightCount * sizeof(r32));
-    NeuralNetwork->PreviousWeights->Array = (r32 *)malloc(WeightCount * sizeof(r32));
+    Weights->Array = (r32 *)malloc(WeightCount * sizeof(r32));
+    PreviousWeights->Array = (r32 *)malloc(WeightCount * sizeof(r32));
 
-    SeedArrayRandomly(NeuralNetwork->Weights->Array, WeightCount);
-    SeedArrayRandomly(NeuralNetwork->PreviousWeights->Array, WeightCount);
+    SeedArrayRandomly(Weights->Array, WeightCount);
+    SeedArrayRandomly(PreviousWeights->Array, WeightCount);
+
+    NeuralNetwork->Data = Data;
+    NeuralNetwork->Delta = Delta;
+    NeuralNetwork->Weights = Weights;
+    NeuralNetwork->PreviousWeights = PreviousWeights;
 }
 
 internal r32
@@ -159,14 +169,10 @@ FlatNN()
 
     u32 LayerSizes[] = LAYERSIZES;
 
-    printf("before init\n");
-
     InitializeNeuralNetwork(&NeuralNetwork,
                             INPUTCOUNT, OUTPUTCOUNT, LayerSizes, ArrayCount(LayerSizes),
                             BETA, ALPHA, EPSILON, MAXITERATIONS);
     
-    printf("after init\n");
-        
     Assert(ArrayCount(TrainingData) % (NeuralNetwork.InputCount + NeuralNetwork.OutputCount) == 0);
 
     u32 TrainingDataPointCount = ArrayCount(TrainingData) / (NeuralNetwork.InputCount + NeuralNetwork.OutputCount);
