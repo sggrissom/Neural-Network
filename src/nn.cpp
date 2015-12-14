@@ -10,11 +10,18 @@
 #define MAX_ITERATIONS 500000
 #define TEST_ITERATIONS 1000
 
-#define IRIS 1
+#define DIGITS 1
 
 #if IRIS
-#define LAYERSIZES {4,250,2}
-#include "iris.data"
+#define LAYERSIZES {4,100,100,2}
+#define FILENAME "..\\src\\iris.data"
+#include "load.cpp"
+#endif
+
+#if DIGITS
+#define LAYERSIZES {256,5,10}
+#define FILENAME "..\\src\\digits.data"
+#include "load.cpp"
 #endif
 
 #if XOR4
@@ -319,9 +326,17 @@ s32 main()
     u32 OutputCount = NeuralNetwork.OutputCount;
     u32 LayerCount = NeuralNetwork.LayerCount;
 
-    Assert(ArrayCount(TrainingData) % (InputCount + OutputCount) == 0);
 
-    u32 TrainingDataPointCount = ArrayCount(TrainingData) / (InputCount + OutputCount);
+#if IRIS || DIGITS
+    r32 *TrainingData = 0;
+    u32 DataCount = LoadCSV(FILENAME, &TrainingData);
+    Assert(DataCount % (InputCount + OutputCount) == 0);
+#else
+    u32 DataCount = ArrayCount(TrainingData);
+    Assert(DataCount % (InputCount + OutputCount) == 0);
+#endif
+
+    u32 TrainingDataPointCount = DataCount / (InputCount + OutputCount);
     u32 TrainDataPitch = InputCount + OutputCount;
 
     InitializeNetwork(&NeuralNetwork);
@@ -329,7 +344,7 @@ s32 main()
     clock_t startTime = clock();
     
     for(u32 IterationIndex = 0;
-        IterationIndex < MaximumIterations;
+        IterationIndex < MaximumIterations*TrainDataPitch;
         ++IterationIndex)
     {
         r32 *DataPoint = &TrainingData[(IterationIndex%TrainingDataPointCount)*TrainDataPitch];
@@ -350,17 +365,23 @@ s32 main()
 	{
 		FeedForward(&NeuralNetwork,
                     &TrainingData[i*TrainDataPitch]);
-		for (u32 j=0;
+		for(u32 j=0;
              j < InputCount;
-             j++)
+             ++j)
 		{
 			r32 Value = TrainingData[i*(TrainDataPitch)+j];
             printf("%f ", Value);
 		}
 
+        for(u32 j=0;
+            j < OutputCount;
+            ++j)
+        {
+            printf("Answer: %f\n", TrainingData[i * TrainDataPitch + InputCount + j]);
+            printf("Guess: %f\n\n", NeuralNetwork.Data[NeuralNetwork.DataRowPointer[LayerCount-1] + j]);
+        }
+        
         printf("\n");
-        printf("Answer: %f\n", TrainingData[i * TrainDataPitch + InputCount]);
-        printf("Guess: %f\n\n", NeuralNetwork.Data[NeuralNetwork.DataRowPointer[LayerCount-1]]);
 	}
     
     printf("\n\n\n");
@@ -373,15 +394,20 @@ s32 main()
 	{
 		FeedForward(&NeuralNetwork,
                     &TrainingData[((i%TrainingDataPointCount)*TrainDataPitch)]);
-		u32 Actual = (u32)(TrainingData[(i%TrainingDataPointCount)*TrainDataPitch + InputCount]);
-		r32 Guess = NeuralNetwork.Data[NeuralNetwork.DataRowPointer[LayerCount-1]];
-		u32 Prediction = (u32)(Guess + 0.5f);
-		if (Prediction == Actual)
-		{
-			++Correct;
-		} else {
-            ++Incorrect;
-		}
+        for(u32 j = 0;
+            j < OutputCount;
+            ++j)
+        {
+            u32 Actual = (u32)(TrainingData[(i%TrainingDataPointCount)*TrainDataPitch + InputCount + j]);
+            r32 Guess = NeuralNetwork.Data[NeuralNetwork.DataRowPointer[LayerCount-1] + j];
+            u32 Prediction = (u32)(Guess + 0.5f);
+            if (Prediction == Actual)
+            {
+                ++Correct;
+            } else {
+                ++Incorrect;
+            }
+        }
 	}
 
     r32 Accuracy = ((r32)Correct)/((r32)(Correct+Incorrect));
