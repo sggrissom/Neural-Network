@@ -4,19 +4,50 @@
 
 #include <slib.h>
 
-#define LAYERSIZES {2,3,1}
 #define BETA 0.3f
 #define ALPHA 0.1f
 #define EPSILON 0.0001f
 #define MAX_ITERATIONS 500000
 #define TEST_ITERATIONS 1000
 
+#define IRIS 1
+
+#if IRIS
+#define LAYERSIZES {4,250,2}
+#include "iris.data"
+#endif
+
+#if XOR4
+#define LAYERSIZES {4,250,1}
+global r32 TrainingData[] = {
+    0,0,0,0,0,
+    0,0,0,1,1,
+    0,0,1,0,1,
+    0,0,1,1,0,
+    0,1,0,0,1,
+    0,1,0,1,0,
+    0,1,1,0,0,
+    0,1,1,1,1,
+    1,0,0,0,1,
+    1,0,0,1,0,
+    1,0,1,0,0,
+    1,0,1,1,1,
+    1,1,0,0,0,
+    1,1,0,1,1,
+    1,1,1,0,1,
+    1,1,1,1,0,
+};
+#endif
+
+#if XOR2
+#define LAYERSIZES {2,5,5,1}
 global r32 TrainingData[] = {
     0,0,0,
     0,1,1,
     1,0,1,
     1,1,0,
 };
+#endif
     
 struct neural_network
 {
@@ -129,7 +160,7 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
 			Sum += Weights[WeightsRowPtr[LayerIndex] +
                                           (LayerSizes[LayerIndex-1]+1)*NeuronIndex +
                                           LayerSizes[LayerIndex-1]];
-            
+
 			Data[DataRowPtr[LayerIndex]+NeuronIndex] = (1.0f/(1.0f+(r32)exp(-Sum)));
 		}
 	}
@@ -140,6 +171,18 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
 {
     FeedForward(NeuralNetwork, DataPoint);
 
+    u32 *lsize = NeuralNetwork->LayerSizes;
+    u32 numl = NeuralNetwork->LayerCount;
+    r32 *delta = NeuralNetwork->Delta;
+    r32 *out = NeuralNetwork->Data;
+    u32 *rowptr_od = NeuralNetwork->DataRowPointer;
+    u32 *rowptr_w = NeuralNetwork->WeightsRowPointer;
+    r32 *tgt = Target;
+    r32 *weight = NeuralNetwork->Weights;
+    r32 alpha = NeuralNetwork->Alpha;
+    r32 beta = NeuralNetwork->Beta;
+    r32 *prevDwt = NeuralNetwork->WeightDelta;
+    
     r32 *Data = NeuralNetwork->Data;
     r32 *Delta = NeuralNetwork->Delta;
     r32 *Weights = NeuralNetwork->Weights;
@@ -151,6 +194,7 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
     r32 Alpha = NeuralNetwork->Alpha;
     r32 Beta = NeuralNetwork->Beta;
 
+    
 	for (u32 LayerIndex = 0;
          LayerIndex < LayerSizes[(LayerCount)-1];
          ++LayerIndex)
@@ -176,8 +220,8 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
 			{
                 r32 DeltaValue = Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex];
                 r32 WeightValue = Weights[WeightsRowPtr[LayerIndex + 1] +
-                                          (LayerSizes[LayerIndex]+1)*NeuronIndex +
-                                          NextNeuronIndex];
+                                          (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                          NeuronIndex];
 
                 Sum += DeltaValue * WeightValue;
 			}
@@ -211,6 +255,7 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                 Alpha * WeightDelta[WeightsRowPtr[LayerIndex] +
                                     PrevLayerSize * NeuronIndex + LayerSizes[LayerIndex-1]];
 		}
+        
 	}
 
 	for(u32 LayerIndex = 1;
@@ -226,22 +271,31 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                 PrevNeuronIndex < LayerSizes[LayerIndex-1];
                 ++PrevNeuronIndex)
 			{
-                WeightDelta[WeightsRowPtr[LayerIndex] + PrevLayerSize * NeuronIndex + PrevNeuronIndex] +=
+                WeightDelta[WeightsRowPtr[LayerIndex] +
+                            (PrevLayerSize * NeuronIndex)
+                            + PrevNeuronIndex] =
                     Beta * Delta[DataRowPtr[LayerIndex]+NeuronIndex] *
                     Data[DataRowPtr[LayerIndex-1] + PrevNeuronIndex];
-                Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * NeuronIndex + PrevNeuronIndex] +=
+                
+                Weights[WeightsRowPtr[LayerIndex] +
+                        (PrevLayerSize * NeuronIndex) +
+                        PrevNeuronIndex] +=
                     WeightDelta[WeightsRowPtr[LayerIndex] +
                                 PrevLayerSize * NeuronIndex + PrevNeuronIndex];
 			}
             
-            WeightDelta[WeightsRowPtr[LayerIndex] + PrevLayerSize * NeuronIndex + LayerSizes[LayerIndex-1]] +=
-                Beta * Delta[DataRowPtr[LayerIndex]+NeuronIndex] *
-                Data[DataRowPtr[LayerIndex-1] + LayerSizes[LayerIndex-1]];
-            Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * NeuronIndex + LayerSizes[LayerIndex-1]] +=
+            WeightDelta[WeightsRowPtr[LayerIndex] +
+                        (PrevLayerSize * NeuronIndex)
+                        + LayerSizes[LayerIndex-1]] =
+                Beta * Delta[DataRowPtr[LayerIndex]+NeuronIndex];
+            
+            Weights[WeightsRowPtr[LayerIndex] +
+                    (PrevLayerSize * NeuronIndex) +
+                    LayerSizes[LayerIndex-1]] +=
                 WeightDelta[WeightsRowPtr[LayerIndex] +
                             PrevLayerSize * NeuronIndex + LayerSizes[LayerIndex-1]];
 		}
-	}
+	}    
 }
 
 s32 main()
@@ -296,7 +350,9 @@ s32 main()
 	{
 		FeedForward(&NeuralNetwork,
                     &TrainingData[i*TrainDataPitch]);
-		for (u32 j=0; j < InputCount; j++)
+		for (u32 j=0;
+             j < InputCount;
+             j++)
 		{
 			r32 Value = TrainingData[i*(TrainDataPitch)+j];
             printf("%f ", Value);
@@ -304,7 +360,7 @@ s32 main()
 
         printf("\n");
         printf("Answer: %f\n", TrainingData[i * TrainDataPitch + InputCount]);
-        printf("Guess: %f\n", NeuralNetwork.Data[NeuralNetwork.DataRowPointer[LayerCount-1]]);
+        printf("Guess: %f\n\n", NeuralNetwork.Data[NeuralNetwork.DataRowPointer[LayerCount-1]]);
 	}
     
     printf("\n\n\n");
@@ -324,7 +380,7 @@ s32 main()
 		{
 			++Correct;
 		} else {
-		   ++Incorrect;
+            ++Incorrect;
 		}
 	}
 
