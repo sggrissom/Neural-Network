@@ -7,10 +7,13 @@
 #define BETA 0.3f
 #define ALPHA 0.1f
 #define EPSILON 0.0001f
-#define MAX_ITERATIONS 500000
+#define MAX_ITERATIONS 1000
 #define TEST_ITERATIONS 1000
 
+#define IRIS 0
 #define DIGITS 1
+#define XOR4 0
+#define XOR2 0
 
 #if IRIS
 #define LAYERSIZES {4,100,100,2}
@@ -19,13 +22,13 @@
 #endif
 
 #if DIGITS
-#define LAYERSIZES {256,5,10}
+#define LAYERSIZES {256,1,10}
 #define FILENAME "..\\src\\digits.data"
 #include "load.cpp"
 #endif
 
 #if XOR4
-#define LAYERSIZES {4,250,1}
+#define LAYERSIZES {4,10,1}
 global r32 TrainingData[] = {
     0,0,0,0,0,
     0,0,0,1,1,
@@ -177,18 +180,6 @@ internal void
 BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
 {
     FeedForward(NeuralNetwork, DataPoint);
-
-    u32 *lsize = NeuralNetwork->LayerSizes;
-    u32 numl = NeuralNetwork->LayerCount;
-    r32 *delta = NeuralNetwork->Delta;
-    r32 *out = NeuralNetwork->Data;
-    u32 *rowptr_od = NeuralNetwork->DataRowPointer;
-    u32 *rowptr_w = NeuralNetwork->WeightsRowPointer;
-    r32 *tgt = Target;
-    r32 *weight = NeuralNetwork->Weights;
-    r32 alpha = NeuralNetwork->Alpha;
-    r32 beta = NeuralNetwork->Beta;
-    r32 *prevDwt = NeuralNetwork->WeightDelta;
     
     r32 *Data = NeuralNetwork->Data;
     r32 *Delta = NeuralNetwork->Delta;
@@ -200,7 +191,6 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
     u32 LayerCount = NeuralNetwork->LayerCount;
     r32 Alpha = NeuralNetwork->Alpha;
     r32 Beta = NeuralNetwork->Beta;
-
     
 	for (u32 LayerIndex = 0;
          LayerIndex < LayerSizes[(LayerCount)-1];
