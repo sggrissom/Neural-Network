@@ -11,8 +11,8 @@
 #define MAX_ITERATIONS 10
 #define TEST_ITERATIONS 1000
 
-#define FLAT 0
-#define UNROLLED 1
+#define FLAT 1
+#define UNROLLED 0
 
 #define IRIS 0
 #define DIGITS 1

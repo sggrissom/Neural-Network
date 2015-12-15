@@ -1,8 +1,9 @@
 /* ========================================================================
-   File: UnrolledNN.cpp
+   File: simdNN.cpp
    Date: 2015-12-15
    Creator: Steven Grissom
    ======================================================================== */
+
 
 internal void
 FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
