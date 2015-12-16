@@ -198,8 +198,6 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
                             LayerSizes[LayerIndex-1]];
 
                 Data[DataRowPtr[LayerIndex]+(NeuronIndex+3)] = (1.0f/(1.0f+(r32)exp(-Sum3)));
-
-                printf("%f %f %f %f\n", Sum0, Sum1, Sum2, Sum3);
             }
             for(;
                 NeuronIndex < LayerSizes[LayerIndex];

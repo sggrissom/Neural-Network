@@ -12,8 +12,8 @@
 #define TEST_ITERATIONS 1000
 
 #define FLAT 0
-#define UNROLLED 0
-#define SIMD 1
+#define UNROLLED 1
+#define SIMD 0
 
 #define IRIS 0
 #define DIGITS 0

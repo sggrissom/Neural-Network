@@ -7,7 +7,7 @@
 #define ALIGN_SIZE 16
 #define ALIGN __declspec(align(ALIGN_SIZE))
 
-                __m128 One = _mm_set1_ps(1);
+__m128 One = _mm_set1_ps(1);
 
 
 /* declare some SSE constants -- why can't I figure a better way to do that? */
