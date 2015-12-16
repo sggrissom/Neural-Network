@@ -37,6 +37,12 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
         LayerIndex < NeuralNetwork->LayerCount;
         ++LayerIndex)
 	{
+        u32 PrevLayerSize = LayerSizes[LayerIndex-1]+1;
+        while(PrevLayerSize&15)
+        {
+            ++PrevLayerSize;
+        }
+            
         {
             u32 NeuronIndex = 0;
             for(;
@@ -75,120 +81,120 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
                     {
                         c00 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+0) +
+                                     (PrevLayerSize)*(NeuronIndex+0) +
                                      PrevNeuronIndex]);
                         c01 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+1]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+0) +
+                                     (PrevLayerSize)*(NeuronIndex+0) +
                                      PrevNeuronIndex+1]);
                         c02 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+2]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+0) +
+                                     (PrevLayerSize)*(NeuronIndex+0) +
                                      PrevNeuronIndex+2]);
                         c03 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+3]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+0) +
+                                     (PrevLayerSize)*(NeuronIndex+0) +
                                      PrevNeuronIndex+3]);
-                        
+
                         c10 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+1) +
+                                     (PrevLayerSize)*(NeuronIndex+1) +
                                      PrevNeuronIndex]);
                         c11 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+1]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+1) +
+                                     (PrevLayerSize)*(NeuronIndex+1) +
                                      PrevNeuronIndex+1]);
                         c12 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+2]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+1) +
+                                     (PrevLayerSize)*(NeuronIndex+1) +
                                      PrevNeuronIndex+2]);
                         c13 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+3]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+1) +
+                                     (PrevLayerSize)*(NeuronIndex+1) +
                                      PrevNeuronIndex+3]);
                         
                         c20 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+2) +
+                                     (PrevLayerSize)*(NeuronIndex+2) +
                                      PrevNeuronIndex]);
                         c21 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+1]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+2) +
+                                     (PrevLayerSize)*(NeuronIndex+2) +
                                      PrevNeuronIndex+1]);
                         c22 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+2]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+2) +
+                                     (PrevLayerSize)*(NeuronIndex+2) +
                                      PrevNeuronIndex+2]);
                         c23 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+3]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+2) +
+                                     (PrevLayerSize)*(NeuronIndex+2) +
                                      PrevNeuronIndex+3]);
                         
                         c30 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+3) +
+                                     (PrevLayerSize)*(NeuronIndex+3) +
                                      PrevNeuronIndex]);
                         c31 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+1]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+3) +
+                                     (PrevLayerSize)*(NeuronIndex+3) +
                                      PrevNeuronIndex+1]);
                         c32 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+2]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+3) +
+                                     (PrevLayerSize)*(NeuronIndex+3) +
                                      PrevNeuronIndex+2]);
                         c33 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+3]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+3) +
+                                     (PrevLayerSize)*(NeuronIndex+3) +
                                      PrevNeuronIndex+3]);
                     }
-            
+
                     for(;
                         PrevNeuronIndex < LayerSizes[LayerIndex-1];
                         ++PrevNeuronIndex)
                     {
                         c00 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+0) +
+                                     (PrevLayerSize)*(NeuronIndex+0) +
                                      PrevNeuronIndex]);
                         c10 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+1) +
+                                     (PrevLayerSize)*(NeuronIndex+1) +
                                      PrevNeuronIndex]);
                         c20 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+2) +
+                                     (PrevLayerSize)*(NeuronIndex+2) +
                                      PrevNeuronIndex]);
                         c30 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+3) +
+                                     (PrevLayerSize)*(NeuronIndex+3) +
                                      PrevNeuronIndex]);
                     }
                 }
             
                 Sum0 += c00 + c01 + c02 + c03 +
                     Weights[WeightsRowPtr[LayerIndex] +
-                            (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+0) +
+                            (PrevLayerSize)*(NeuronIndex+0) +
                             LayerSizes[LayerIndex-1]];
 
                 Data[DataRowPtr[LayerIndex]+(NeuronIndex+0)] = (1.0f/(1.0f+(r32)exp(-Sum0)));
                 
                 Sum1 += c10 + c11 + c12 + c13 +
                     Weights[WeightsRowPtr[LayerIndex] +
-                            (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+1) +
+                            (PrevLayerSize)*(NeuronIndex+1) +
                             LayerSizes[LayerIndex-1]];
 
                 Data[DataRowPtr[LayerIndex]+(NeuronIndex+1)] = (1.0f/(1.0f+(r32)exp(-Sum1)));
                 
                 Sum2 += c20 + c21 + c22 + c23 +
                     Weights[WeightsRowPtr[LayerIndex] +
-                            (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+2) +
+                            (PrevLayerSize)*(NeuronIndex+2) +
                             LayerSizes[LayerIndex-1]];
 
                 Data[DataRowPtr[LayerIndex]+(NeuronIndex+2)] = (1.0f/(1.0f+(r32)exp(-Sum2)));
                 
                 Sum3 += c30 + c31 + c32 + c33 +
                     Weights[WeightsRowPtr[LayerIndex] +
-                            (LayerSizes[LayerIndex-1]+1)*(NeuronIndex+3) +
+                            (PrevLayerSize)*(NeuronIndex+3) +
                             LayerSizes[LayerIndex-1]];
 
                 Data[DataRowPtr[LayerIndex]+(NeuronIndex+3)] = (1.0f/(1.0f+(r32)exp(-Sum3)));
@@ -211,19 +217,19 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
                     {
                         c0 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*NeuronIndex +
+                                     (PrevLayerSize)*NeuronIndex +
                                      PrevNeuronIndex]);
                         c1 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+1]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*NeuronIndex +
+                                     (PrevLayerSize)*NeuronIndex +
                                      PrevNeuronIndex+1]);
                         c2 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+2]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*NeuronIndex +
+                                     (PrevLayerSize)*NeuronIndex +
                                      PrevNeuronIndex+2]);
                         c3 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex+3]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*NeuronIndex +
+                                     (PrevLayerSize)*NeuronIndex +
                                      PrevNeuronIndex+3]);
                     }
             
@@ -233,14 +239,14 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
                     {
                         c0 += (Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex]) *
                             (Weights[WeightsRowPtr[LayerIndex] +
-                                     (LayerSizes[LayerIndex-1]+1)*NeuronIndex +
+                                     (PrevLayerSize)*NeuronIndex +
                                      PrevNeuronIndex]);
                     }
                 }
             
                 Sum += c0 + c1 + c2 + c3 +
                     Weights[WeightsRowPtr[LayerIndex] +
-                            (LayerSizes[LayerIndex-1]+1)*NeuronIndex +
+                            (PrevLayerSize)*NeuronIndex +
                             LayerSizes[LayerIndex-1]];
 
                 Data[DataRowPtr[LayerIndex]+NeuronIndex] = (1.0f/(1.0f+(r32)exp(-Sum)));
@@ -310,6 +316,11 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
         LayerIndex > 0;
         --LayerIndex)
     {
+        u32 CurrLayerSize = LayerSizes[LayerIndex]+1;
+        while(CurrLayerSize&15)
+        {
+            ++CurrLayerSize;
+        }
         {
             u32 NeuronIndex = 0;
             for(;
@@ -348,70 +359,70 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                     {
                         c00 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                    (CurrLayerSize)*NextNeuronIndex +
                                     (NeuronIndex+0)];
                         c01 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+1] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+1) +
+                                    (CurrLayerSize)*(NextNeuronIndex+1) +
                                     (NeuronIndex+0)];
                         c02 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+2] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+2) +
+                                    (CurrLayerSize)*(NextNeuronIndex+2) +
                                     (NeuronIndex+0)];
                         c03 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+3] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+3) +
+                                    (CurrLayerSize)*(NextNeuronIndex+3) +
                                     (NeuronIndex+0)];
                     
                         c10 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                    (CurrLayerSize)*NextNeuronIndex +
                                     (NeuronIndex+1)];
                         c11 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+1] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+1) +
+                                    (CurrLayerSize)*(NextNeuronIndex+1) +
                                     (NeuronIndex+1)];
                         c12 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+2] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+2) +
+                                    (CurrLayerSize)*(NextNeuronIndex+2) +
                                     (NeuronIndex+1)];
                         c13 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+3] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+3) +
+                                    (CurrLayerSize)*(NextNeuronIndex+3) +
                                     (NeuronIndex+1)];
                     
                         c20 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                    (CurrLayerSize)*NextNeuronIndex +
                                     (NeuronIndex+2)];
                         c21 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+1] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+1) +
+                                    (CurrLayerSize)*(NextNeuronIndex+1) +
                                     (NeuronIndex+2)];
                         c22 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+2] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+2) +
+                                    (CurrLayerSize)*(NextNeuronIndex+2) +
                                     (NeuronIndex+2)];
                         c23 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+3] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+3) +
+                                    (CurrLayerSize)*(NextNeuronIndex+3) +
                                     (NeuronIndex+2)];
                     
                         c30 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                    (CurrLayerSize)*NextNeuronIndex +
                                     (NeuronIndex+3)];
                         c31 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+1] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+1) +
+                                    (CurrLayerSize)*(NextNeuronIndex+1) +
                                     (NeuronIndex+3)];
                         c32 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+2] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+2) +
+                                    (CurrLayerSize)*(NextNeuronIndex+2) +
                                     (NeuronIndex+3)];
                         c33 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+3] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+3) +
+                                    (CurrLayerSize)*(NextNeuronIndex+3) +
                                     (NeuronIndex+3)];
                     }
                     for(;
@@ -420,19 +431,19 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                     {
                         c00 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                    (CurrLayerSize)*NextNeuronIndex +
                                     (NeuronIndex+0)];
                         c10 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                    (CurrLayerSize)*NextNeuronIndex +
                                     (NeuronIndex+1)];
                         c20 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                    (CurrLayerSize)*NextNeuronIndex +
                                     (NeuronIndex+2)];
                         c30 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                    (CurrLayerSize)*NextNeuronIndex +
                                     (NeuronIndex+3)];
                     }
                 }
@@ -483,19 +494,19 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                     {
                         c0 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                    (CurrLayerSize)*NextNeuronIndex +
                                     NeuronIndex];
                         c1 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+1] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+1) +
+                                    (CurrLayerSize)*(NextNeuronIndex+1) +
                                     NeuronIndex];
                         c2 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+2] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+2) +
+                                    (CurrLayerSize)*(NextNeuronIndex+2) +
                                     NeuronIndex];
                         c3 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex+3] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*(NextNeuronIndex+3) +
+                                    (CurrLayerSize)*(NextNeuronIndex+3) +
                                     NeuronIndex];
                     }
                     for(;
@@ -504,7 +515,7 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                     {
                         c0 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                    (CurrLayerSize)*NextNeuronIndex +
                                     NeuronIndex];
                     }
                 }
@@ -526,13 +537,18 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
         LayerIndex < LayerCount;
         ++LayerIndex)
 	{
+        u32 PrevLayerSize = LayerSizes[LayerIndex-1]+1;
+        while(PrevLayerSize&15)
+        {
+            ++PrevLayerSize;
+        }
+
         {
             u32 NeuronIndex = 0;
             for(;
                 NeuronIndex+3 < LayerSizes[LayerIndex];
                 NeuronIndex+=4)
             {
-                u32 PrevLayerSize = LayerSizes[LayerIndex-1]+1;
                 {
                     u32 PrevNeuronIndex = 0;
                     for(;
@@ -635,8 +651,6 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                 NeuronIndex < LayerSizes[LayerIndex];
                 ++NeuronIndex)
             {
-                u32 PrevLayerSize = LayerSizes[LayerIndex-1]+1;
-
                 {
                     u32 PrevNeuronIndex = 0;
                     for(;
@@ -679,6 +693,12 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
         LayerIndex < LayerCount;
         ++LayerIndex)
 	{
+        u32 PrevLayerSize = LayerSizes[LayerIndex-1]+1;
+        while(PrevLayerSize&15)
+        {
+            ++PrevLayerSize;
+        }
+
         {
             u32 NeuronIndex = 0;
         
@@ -686,8 +706,6 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                 NeuronIndex+3 < LayerSizes[LayerIndex];
                 NeuronIndex+=4)
             {
-                u32 PrevLayerSize = LayerSizes[LayerIndex-1]+1;
-
                 {
                     u32 PrevNeuronIndex = 0;
                     for(;
@@ -1008,8 +1026,6 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                 NeuronIndex < LayerSizes[LayerIndex];
                 ++NeuronIndex)
             {
-                u32 PrevLayerSize = LayerSizes[LayerIndex-1]+1;
-
                 {
                     u32 PrevNeuronIndex = 0;
                     for(;

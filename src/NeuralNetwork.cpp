@@ -8,16 +8,19 @@
 #define BETA 0.3f
 #define ALPHA 0.1f
 #define EPSILON 0.0001f
-#define MAX_ITERATIONS 10
+#define MAX_ITERATIONS 10000
 #define TEST_ITERATIONS 1000
 
-#define FLAT 1
+#define FLAT 0
 #define UNROLLED 0
+#define SIMD 1
 
 #define IRIS 0
-#define DIGITS 1
-#define XOR4 0
+#define DIGITS 0
+#define XOR4 1
 #define XOR2 0
+
+#define ALIGN_WEIGHTS 1;
 
 #if IRIS
 #define LAYERSIZES {4,100,100,2}
@@ -32,7 +35,7 @@
 #endif
 
 #if XOR4
-#define LAYERSIZES {4,10,1}
+#define LAYERSIZES {4,4,1}
 global r32 TrainingData[] = {
     0,0,0,0,0,
     0,0,0,1,1,
@@ -82,6 +85,16 @@ struct neural_network
     u32 *WeightsRowPointer;
 };
 
+internal void *
+AlignedMalloc(u32 Bytes)
+{
+    void *mem = malloc(Bytes+15);
+    Assert(((size_t)mem&15) == 0);
+    //void *ptr = (void *)(((uintptr_t)mem+15) & ~ (uintptr_t)0x0F);
+
+    return mem;
+}
+
 internal void
 InitializeNetwork(neural_network *NeuralNetwork)
 {
@@ -94,7 +107,7 @@ InitializeNetwork(neural_network *NeuralNetwork)
     u32 *lsize = NeuralNetwork->LayerSizes;
 
 	u32 numn = 0;
-	u32 *rowptr_od = (u32 *)malloc(numl*sizeof(u32));
+	u32 *rowptr_od = (u32 *)AlignedMalloc(numl*sizeof(u32));
 	for(u32 i=0;
         i<numl;
         ++i)
@@ -105,20 +118,31 @@ InitializeNetwork(neural_network *NeuralNetwork)
 	rowptr_od[numl] = numn;
 
 	// Allocate memory for out, delta
-	data = (r32 *)malloc(numn * sizeof(r32));
-	delta = (r32 *)malloc(numn * sizeof(r32));
+	data = (r32 *)AlignedMalloc(numn * sizeof(r32));
+	delta = (r32 *)AlignedMalloc(numn * sizeof(r32));
 
 	// Allocate memory for weights, prevDwt
 	u32 numw = 0;
-    u32 *rowptr_w = (u32 *)malloc((numl+1)*sizeof(u32));
+    u32 *rowptr_w = (u32 *)AlignedMalloc((numl+1)*sizeof(u32));
 	rowptr_w[0] = 0;
 	for(u32 i=1; i<numl; i++)
 	{
 		rowptr_w[i] = numw;
-		numw += lsize[i]*(lsize[i-1]+1);
+        u32 PrevLayerSize = (lsize[i-1]+1);
+        while(PrevLayerSize&15)
+        {
+            ++PrevLayerSize;
+        }
+        
+		numw += lsize[i]*PrevLayerSize;
+
+        while(numw&15)
+        {
+            ++numw; //ensure 16 byte alignment
+        }
 	}
-	weight = (r32 *)malloc(numw * sizeof(r32));
-	prevDwt = (r32 *)malloc(numw * sizeof(r32));
+	weight = (r32 *)AlignedMalloc(numw * sizeof(r32));
+	prevDwt = (r32 *)AlignedMalloc(numw * sizeof(r32));
 
 	// Seed and assign random weights; set prevDwt to 0 for first iter
 	for(u32 i=1;i<numw;i++)

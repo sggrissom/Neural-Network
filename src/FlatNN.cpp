@@ -30,19 +30,24 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
             ++NeuronIndex)
 		{
 			r32 Sum = 0.0f;
+            u32 PrevLayerSize = LayerSizes[LayerIndex-1]+1;
+            while(PrevLayerSize&15)
+            {
+                ++PrevLayerSize;
+            }
 			for(u32 PrevNeuronIndex = 0;
                 PrevNeuronIndex < LayerSizes[LayerIndex-1];
                 ++PrevNeuronIndex)
 			{
                 r32 NeuronValue = Data[DataRowPtr[LayerIndex-1]+PrevNeuronIndex];
                 r32 WeightValue = Weights[WeightsRowPtr[LayerIndex] +
-                                          (LayerSizes[LayerIndex-1]+1)*NeuronIndex +
+                                          (PrevLayerSize)*NeuronIndex +
                                           PrevNeuronIndex];
 				Sum += NeuronValue * WeightValue;
 			}
             
 			Sum += Weights[WeightsRowPtr[LayerIndex] +
-                                          (LayerSizes[LayerIndex-1]+1)*NeuronIndex +
+                                          (PrevLayerSize)*NeuronIndex +
                                           LayerSizes[LayerIndex-1]];
 
 			Data[DataRowPtr[LayerIndex]+NeuronIndex] = (1.0f/(1.0f+(r32)exp(-Sum)));
@@ -80,6 +85,11 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
         LayerIndex > 0;
         --LayerIndex)
 	{
+        u32 CurrLayerSize = LayerSizes[LayerIndex]+1;
+        while(CurrLayerSize&15)
+        {
+            ++CurrLayerSize;
+        }
 		for(u32 NeuronIndex = 0;
             NeuronIndex < LayerSizes[LayerIndex];
             ++NeuronIndex)
@@ -91,7 +101,7 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
 			{
                 r32 DeltaValue = Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex];
                 r32 WeightValue = Weights[WeightsRowPtr[LayerIndex + 1] +
-                                          (LayerSizes[LayerIndex]+1)*NextNeuronIndex +
+                                          CurrLayerSize*NextNeuronIndex +
                                           NeuronIndex];
 
                 Sum += DeltaValue * WeightValue;
@@ -113,6 +123,10 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
             ++NeuronIndex)
 		{
             u32 PrevLayerSize = LayerSizes[LayerIndex-1]+1;
+            while(PrevLayerSize&15)
+            {
+                ++PrevLayerSize;
+            }
             for(u32 PrevNeuronIndex = 0;
                 PrevNeuronIndex < LayerSizes[LayerIndex-1];
                 ++PrevNeuronIndex)
@@ -138,6 +152,10 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
             ++NeuronIndex)
 		{
             u32 PrevLayerSize = LayerSizes[LayerIndex-1]+1;
+            while(PrevLayerSize&15)
+            {
+                ++PrevLayerSize;
+            }
             for(u32 PrevNeuronIndex = 0;
                 PrevNeuronIndex < LayerSizes[LayerIndex-1];
                 ++PrevNeuronIndex)

@@ -10,6 +10,8 @@
 #include "FlatNN.cpp"
 #elif UNROLLED
 #include "UnrolledNN.cpp"
+#elif SIMD
+#include "simdNN.cpp"
 #endif
 
 s32 main()
@@ -63,7 +65,7 @@ s32 main()
     clock_t clockTicksTaken = endTime - startTime;
     r32 timeInSeconds = clockTicksTaken / (r32) CLOCKS_PER_SEC;
     
-    printf("%f s\n", timeInSeconds);
+    printf("%.3f s\n", timeInSeconds);
 
 #if 0
     for(u32 i=0;
