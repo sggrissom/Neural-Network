@@ -8,33 +8,33 @@
 #define BETA 0.3f
 #define ALPHA 0.1f
 #define EPSILON 0.0001f
-#define MAX_ITERATIONS 10000
 #define TEST_ITERATIONS 1000
 
 #define FLAT 0
-#define UNROLLED 1
-#define SIMD 0
+#define UNROLLED 0
+#define SIMD 1
 
+#define DIGITS 1
 #define IRIS 0
-#define DIGITS 0
-#define XOR4 1
+#define XOR4 0
 #define XOR2 0
 
-#define ALIGN_WEIGHTS 1;
-
-#if IRIS
-#define LAYERSIZES {4,100,100,2}
-#define FILENAME "..\\src\\iris.data"
-#include "load.cpp"
-#endif
-
 #if DIGITS
+#define MAX_ITERATIONS 10
 #define LAYERSIZES {256,100,10}
 #define FILENAME "..\\src\\digits.data"
 #include "load.cpp"
 #endif
 
+#if IRIS
+#define MAX_ITERATIONS 1000
+#define LAYERSIZES {4,100,100,2}
+#define FILENAME "..\\src\\iris.data"
+#include "load.cpp"
+#endif
+
 #if XOR4
+#define MAX_ITERATIONS 10000
 #define LAYERSIZES {4,4,1}
 global r32 TrainingData[] = {
     0,0,0,0,0,
@@ -57,6 +57,7 @@ global r32 TrainingData[] = {
 #endif
 
 #if XOR2
+#define MAX_ITERATIONS 100000
 #define LAYERSIZES {2,5,5,1}
 global r32 TrainingData[] = {
     0,0,0,

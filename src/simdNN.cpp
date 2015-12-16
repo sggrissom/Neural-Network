@@ -8,7 +8,7 @@
 #define ALIGN __declspec(align(ALIGN_SIZE))
 
 __m128 One = _mm_set1_ps(1);
-
+__m128 NegativeOne = _mm_set1_ps(-1);
 
 /* declare some SSE constants -- why can't I figure a better way to do that? */
 #define _PS_CONST(Name, Val)                                            \
@@ -116,7 +116,7 @@ __m128 exp_ps(__m128 x) {
 void PrintWide(__m128 WideFloat)
 {
     r32 *Floats = (r32*) &WideFloat;
-    printf("%f %f %f %f\n", 
+    printf("%.3f %.3f %.3f %.3f\n", 
            Floats[0], Floats[1], Floats[2], Floats[3]);
 }
 
@@ -189,32 +189,10 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
                     {
                         __m128 Value = _mm_load_ps(Data + DataRowPtr[LayerIndex-1]+PrevNeuronIndex);
 
-                        
-                        r32 *wadr = Weights;
-                        u32 offset = WeightsRowPtr[LayerIndex] +
-                            (PrevLayerSize)*(NeuronIndex+0) +
-                            PrevNeuronIndex;
-                        
-                        r32 *adr = wadr + offset;
                         __m128 Weight0 = _mm_load_ps(Weights + WeightsRowPtr[LayerIndex] +
                                              (PrevLayerSize)*(NeuronIndex+0) +
                                              PrevNeuronIndex);
                         WideSum0 = _mm_add_ps(WideSum0, _mm_mul_ps(Value, Weight0));
-
-                        offset = WeightsRowPtr[LayerIndex] +
-                            (PrevLayerSize)*(NeuronIndex+1) +
-                            PrevNeuronIndex;
-                        adr = wadr + offset;
-                        
-                        offset = WeightsRowPtr[LayerIndex] +
-                            (PrevLayerSize)*(NeuronIndex+2) +
-                            PrevNeuronIndex;
-                        adr = wadr + offset;
-                        
-                        offset = WeightsRowPtr[LayerIndex] +
-                            (PrevLayerSize)*(NeuronIndex+3) +
-                            PrevNeuronIndex;
-                        adr = wadr + offset;
 
                         __m128 Weight1 = _mm_load_ps(Weights + WeightsRowPtr[LayerIndex] +
                                              (PrevLayerSize)*(NeuronIndex+1) +
@@ -263,13 +241,21 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
                 __m128 WideSumTotal = _mm_hadd_ps(WideSum23, WideSum01);
 
                 WideSumTotal = _mm_shuffle_ps(WideSumTotal, WideSumTotal, _MM_SHUFFLE(0,1,2,3));
-
-                __m128 Leftovers = _mm_load_ps(Weights + WeightsRowPtr[LayerIndex] +
-                                               PrevLayerSize * NeuronIndex + LayerSizes[LayerIndex-1]);
+                
+                __m128 Leftovers = _mm_set_ps(
+                    Weights[WeightsRowPtr[LayerIndex] + (PrevLayerSize)*(NeuronIndex+3) + LayerSizes[LayerIndex-1]],
+                    Weights[WeightsRowPtr[LayerIndex] + (PrevLayerSize)*(NeuronIndex+2) + LayerSizes[LayerIndex-1]],
+                    Weights[WeightsRowPtr[LayerIndex] + (PrevLayerSize)*(NeuronIndex+1) + LayerSizes[LayerIndex-1]],
+                    Weights[WeightsRowPtr[LayerIndex] + (PrevLayerSize)*(NeuronIndex+0) + LayerSizes[LayerIndex-1]]);
 
                 WideSumTotal = _mm_add_ps(WideSumTotal, Leftovers);
                 
-                __m128 SigmoidResult = _mm_div_ps(One, _mm_add_ps(One, exp_ps(WideSumTotal)));
+
+                __m128 SigmoidResult = _mm_div_ps(One,
+                                                  _mm_add_ps(One, exp_ps(
+                                                                 _mm_mul_ps(NegativeOne, WideSumTotal))));
+
+                
 
                 _mm_store_ps(Data+DataRowPtr[LayerIndex]+(NeuronIndex), SigmoidResult);
                 
