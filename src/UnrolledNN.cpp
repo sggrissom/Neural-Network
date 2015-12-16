@@ -354,6 +354,11 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                 r32 c31 = 0.0f;
                 r32 c32 = 0.0f;
                 r32 c33 = 0.0f;
+                
+                r32 tc0 = 0.0f;
+                r32 tc1 = 0.0f;
+                r32 tc2 = 0.0f;
+                r32 tc3 = 0.0f;
 
                 {
                     u32 NextNeuronIndex=0;
@@ -432,23 +437,41 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                     for(;
                         NextNeuronIndex < LayerSizes[LayerIndex+1];
                         ++NextNeuronIndex)
-                    {
-                        c00 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
+                    {/*
+                        tc0 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
                                     (CurrLayerSize)*NextNeuronIndex +
                                     (NeuronIndex+0)];
-                        c10 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
+                        tc1 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
                                     (CurrLayerSize)*NextNeuronIndex +
                                     (NeuronIndex+1)];
-                        c20 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
+                        tc2 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
                                     (CurrLayerSize)*NextNeuronIndex +
                                     (NeuronIndex+2)];
-                        c30 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
+                        tc3 += Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex] *
                             Weights[WeightsRowPtr[LayerIndex + 1] +
                                     (CurrLayerSize)*NextNeuronIndex +
-                                    (NeuronIndex+3)];
+                                    (NeuronIndex+3)];*/
+                        
+                        printf("%.4f\n",
+                               Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex]);
+
+                        printf("%.4f %.4f %.4f %.4f\n",
+                               Weights[WeightsRowPtr[LayerIndex + 1] +
+                                    (CurrLayerSize)*NextNeuronIndex +
+                                       (NeuronIndex+0)],
+                               Weights[WeightsRowPtr[LayerIndex + 1] +
+                                    (CurrLayerSize)*NextNeuronIndex +
+                                       (NeuronIndex+1)],
+                               Weights[WeightsRowPtr[LayerIndex + 1] +
+                                    (CurrLayerSize)*NextNeuronIndex +
+                                       (NeuronIndex+2)],
+                               Weights[WeightsRowPtr[LayerIndex + 1] +
+                                    (CurrLayerSize)*NextNeuronIndex +
+                                       (NeuronIndex+3)]);
+
                     }
                 }
 
@@ -479,6 +502,9 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                     Data[DataRowPtr[LayerIndex] + (NeuronIndex+3)] *
                     (1 - Data[DataRowPtr[LayerIndex] + (NeuronIndex+3)]) *
                     Sum3;
+
+                 printf("\n----------------------\n");
+                
             }
             for(;
                 NeuronIndex < LayerSizes[LayerIndex];

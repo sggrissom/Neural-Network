@@ -13,6 +13,8 @@ LoadCSV(char *Filename, r32 **ArrayRef)
     u32 ArraySize = 10;
     r32 *Values = (r32 *)malloc(sizeof(r32) * 10);
 
+    AssertAligned(Values);
+
     u32 ArrayUsed = 0;
     
     if(File)
@@ -43,6 +45,8 @@ LoadCSV(char *Filename, r32 **ArrayRef)
             {
                 ArraySize *= 2;
                 Values = (r32 *)realloc(Values, sizeof(r32) * ArraySize);
+
+                AssertAligned(Values);
             }
             
             Character = fgetc(File);

@@ -19,6 +19,8 @@
 #define XOR4 0
 #define XOR2 0
 
+#define AssertAligned(mem) Assert(((size_t)mem&15) == 0);
+
 #if DIGITS
 #define MAX_ITERATIONS 10
 #define LAYERSIZES {256,100,10}
@@ -86,16 +88,6 @@ struct neural_network
     u32 *WeightsRowPointer;
 };
 
-internal void *
-AlignedMalloc(u32 Bytes)
-{
-    void *mem = malloc(Bytes+15);
-    Assert(((size_t)mem&15) == 0);
-    //void *ptr = (void *)(((uintptr_t)mem+15) & ~ (uintptr_t)0x0F);
-
-    return mem;
-}
-
 internal void
 InitializeNetwork(neural_network *NeuralNetwork)
 {
@@ -108,7 +100,9 @@ InitializeNetwork(neural_network *NeuralNetwork)
     u32 *lsize = NeuralNetwork->LayerSizes;
 
 	u32 numn = 0;
-	u32 *rowptr_od = (u32 *)AlignedMalloc(numl*sizeof(u32));
+	u32 *rowptr_od = (u32 *)malloc(numl*sizeof(u32));
+    AssertAligned(rowptr_od);
+    
 	for(u32 i=0;
         i<numl;
         ++i)
@@ -119,12 +113,16 @@ InitializeNetwork(neural_network *NeuralNetwork)
 	rowptr_od[numl] = numn;
 
 	// Allocate memory for out, delta
-	data = (r32 *)AlignedMalloc(numn * sizeof(r32));
-	delta = (r32 *)AlignedMalloc(numn * sizeof(r32));
+	data = (r32 *)malloc(numn * sizeof(r32));
+	delta = (r32 *)malloc(numn * sizeof(r32));
+    AssertAligned(data);
+    AssertAligned(delta);
 
 	// Allocate memory for weights, prevDwt
 	u32 numw = 0;
-    u32 *rowptr_w = (u32 *)AlignedMalloc((numl+1)*sizeof(u32));
+    u32 *rowptr_w = (u32 *)malloc((numl+1)*sizeof(u32));
+    AssertAligned(rowptr_w);
+    
 	rowptr_w[0] = 0;
 	for(u32 i=1; i<numl; i++)
 	{
@@ -142,8 +140,12 @@ InitializeNetwork(neural_network *NeuralNetwork)
             ++numw; //ensure 16 byte alignment
         }
 	}
-	weight = (r32 *)AlignedMalloc(numw * sizeof(r32));
-	prevDwt = (r32 *)AlignedMalloc(numw * sizeof(r32));
+    
+	weight = (r32 *)malloc(numw * sizeof(r32));
+	prevDwt = (r32 *)malloc(numw * sizeof(r32));
+
+    AssertAligned(weight);
+    AssertAligned(prevDwt);
 
 	// Seed and assign random weights; set prevDwt to 0 for first iter
 	for(u32 i=1;i<numw;i++)
