@@ -744,7 +744,7 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                                     + (PrevNeuronIndex+3)] =
                             Beta * Delta[DataRowPtr[LayerIndex]+NeuronIndex] *
                             Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+3)];
-                
+                        
                         Weights[WeightsRowPtr[LayerIndex] +
                                 (PrevLayerSize * NeuronIndex) +
                                 (PrevNeuronIndex+0)] +=
@@ -769,8 +769,6 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                             WeightDelta[WeightsRowPtr[LayerIndex] +
                                         PrevLayerSize * NeuronIndex + (PrevNeuronIndex+3)];
 
-
-                        
                         WeightDelta[WeightsRowPtr[LayerIndex] +
                                     (PrevLayerSize * (NeuronIndex+1))
                                     + (PrevNeuronIndex+0)] =

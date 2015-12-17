@@ -10,14 +10,21 @@
 #define EPSILON 0.0001f
 #define TEST_ITERATIONS 1000
 
+#define MP 1
+
 #define FLAT 0
 #define UNROLLED 0
 #define SIMD 1
 
 #define DIGITS 0
-#define IRIS 1
-#define XOR4 0
-#define XOR2 0
+#define IRIS 0
+#define XOR4 1
+
+#if MP
+#define NETWORK_COUNT 4
+#else
+#define NETWORK_COUNT 1
+#endif
 
 #define AssertAligned(mem) Assert(((size_t)mem&15) == 0);
 
@@ -37,7 +44,7 @@
 
 #if XOR4
 #define MAX_ITERATIONS 100000
-#define LAYERSIZES {4,40,1}
+#define LAYERSIZES {4,32,16,8,1}
 global r32 TrainingData[] = {
     0,0,0,0,0,
     0,0,0,1,1,
@@ -58,17 +65,6 @@ global r32 TrainingData[] = {
 };
 #endif
 
-#if XOR2
-#define MAX_ITERATIONS 100000
-#define LAYERSIZES {2,5,5,1}
-global r32 TrainingData[] = {
-    0,0,0,
-    0,1,1,
-    1,0,1,
-    1,1,0,
-};
-#endif
-    
 struct neural_network
 {
     u32 LayerCount;
@@ -88,7 +84,7 @@ struct neural_network
     u32 *WeightsRowPointer;
 };
 
-internal void
+internal u32
 InitializeNetwork(neural_network *NeuralNetwork)
 {
 	r32 *data;
@@ -160,4 +156,6 @@ InitializeNetwork(neural_network *NeuralNetwork)
     NeuralNetwork->WeightDelta = prevDwt;
     NeuralNetwork->DataRowPointer = rowptr_od;
     NeuralNetwork->WeightsRowPointer = rowptr_w;
+
+    return numw;
 }

@@ -1,6 +1,7 @@
 
 #include <time.h>
 #include <math.h>
+#include <omp.h>
 
 #include <slib.h>
 
@@ -14,27 +15,46 @@
 #include "simdNN.cpp"
 #endif
 
+internal void
+CombineArrays(r32 *A, r32 *B, r32 *C, r32 *D, u32 Size)
+{
+    for(u32 ArrayIndex = 0;
+        ArrayIndex < Size;
+        ++ArrayIndex)
+    {
+        A[ArrayIndex] += B[ArrayIndex] + C[ArrayIndex] + D[ArrayIndex];
+        A[ArrayIndex] /= 4;
+    }
+}
+
 s32 main()
 {
     srand(0);
     
-    neural_network NeuralNetwork = {};
+    neural_network NeuralNetwork[NETWORK_COUNT] = {};
     
     u32 LayerSizes[] = LAYERSIZES;
-    NeuralNetwork.LayerSizes = LayerSizes;
-    NeuralNetwork.LayerCount = ArrayCount(LayerSizes);
-    NeuralNetwork.InputCount = LayerSizes[0];
-    NeuralNetwork.OutputCount = LayerSizes[NeuralNetwork.LayerCount - 1];
-    NeuralNetwork.Beta = BETA;
-    NeuralNetwork.Alpha = ALPHA;
-    NeuralNetwork.Epsilon = EPSILON;
+    u32 MaximumIterations =  MAX_ITERATIONS / NETWORK_COUNT;
+    u32 LayerCount = ArrayCount(LayerSizes);
+    u32 InputCount = LayerSizes[0];
+    u32 OutputCount = LayerSizes[LayerCount - 1];
 
-    u32 MaximumIterations =  MAX_ITERATIONS;
+    u32 WeightCount = 0;
+    
+    for(u32 NetworkCount = 0;
+        NetworkCount < NETWORK_COUNT;
+        ++NetworkCount)
+    {
+        NeuralNetwork[NetworkCount].LayerSizes = LayerSizes;
+        NeuralNetwork[NetworkCount].LayerCount = LayerCount;
+        NeuralNetwork[NetworkCount].InputCount = InputCount;
+        NeuralNetwork[NetworkCount].OutputCount = OutputCount;
+        NeuralNetwork[NetworkCount].Beta = BETA;
+        NeuralNetwork[NetworkCount].Alpha = ALPHA;
+        NeuralNetwork[NetworkCount].Epsilon = EPSILON;
 
-    u32 InputCount = NeuralNetwork.InputCount;
-    u32 OutputCount = NeuralNetwork.OutputCount;
-    u32 LayerCount = NeuralNetwork.LayerCount;
-
+        WeightCount = InitializeNetwork(&NeuralNetwork[NetworkCount]);
+    }
 
 #if IRIS || DIGITS
     r32 *TrainingData = 0;
@@ -48,18 +68,39 @@ s32 main()
     u32 TrainingDataPointCount = DataCount / (InputCount + OutputCount);
     u32 TrainDataPitch = InputCount + OutputCount;
 
-    InitializeNetwork(&NeuralNetwork);
-
     clock_t startTime = clock();
-    
-    for(u32 IterationIndex = 0;
-        IterationIndex < MaximumIterations*TrainDataPitch;
-        ++IterationIndex)
+
+#pragma omp parallel num_threads(NETWORK_COUNT)
     {
-        r32 *DataPoint = &TrainingData[(IterationIndex%TrainingDataPointCount)*TrainDataPitch];
-        r32 *Target = DataPoint + InputCount;
-        BackPropogate(&NeuralNetwork, DataPoint, Target);
+#if MP
+        u32 NetworkIndex = omp_get_thread_num();
+#else
+        u32 NetworkIndex = 0;
+#endif
+
+        for(u32 IterationIndex = 0;
+            IterationIndex < MaximumIterations*TrainDataPitch;
+            ++IterationIndex)
+        {
+            r32 *DataPoint = &TrainingData[(IterationIndex%TrainingDataPointCount)*TrainDataPitch];
+            r32 *Target = DataPoint + InputCount;
+            BackPropogate(&NeuralNetwork[NetworkIndex], DataPoint, Target);
+        }
     }
+
+#if MP
+    u32 NeuronCount = NeuralNetwork[0].DataRowPointer[LayerCount];
+    CombineArrays(NeuralNetwork[0].Data,
+                  NeuralNetwork[1].Data,
+                  NeuralNetwork[2].Data,
+                  NeuralNetwork[3].Data,
+                  NeuronCount);
+    CombineArrays(NeuralNetwork[0].Weights,
+                  NeuralNetwork[1].Weights,
+                  NeuralNetwork[2].Weights,
+                  NeuralNetwork[3].Weights,
+                  WeightCount);
+#endif
 
     clock_t endTime = clock();
     clock_t clockTicksTaken = endTime - startTime;
@@ -101,14 +142,14 @@ s32 main()
 
 	for(u32 i=0; i<TEST_ITERATIONS; i++)
 	{
-		FeedForward(&NeuralNetwork,
+		FeedForward(&NeuralNetwork[0],
                     &TrainingData[((i%TrainingDataPointCount)*TrainDataPitch)]);
         for(u32 j = 0;
             j < OutputCount;
             ++j)
         {
             u32 Actual = (u32)(TrainingData[(i%TrainingDataPointCount)*TrainDataPitch + InputCount + j]);
-            r32 Guess = NeuralNetwork.Data[NeuralNetwork.DataRowPointer[LayerCount-1] + j];
+            r32 Guess = NeuralNetwork[0].Data[NeuralNetwork[0].DataRowPointer[LayerCount-1] + j];
             u32 Prediction = (u32)(Guess + 0.5f);
             if (Prediction == Actual)
             {

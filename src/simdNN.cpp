@@ -617,7 +617,6 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
 
 /****************************************************************/
     
-    
 	for(u32 LayerIndex = 1;
         LayerIndex < LayerCount;
         ++LayerIndex)
@@ -631,10 +630,6 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
         {
             u32 NeuronIndex = 0;
             
-            __m128 WideWeight0 = _mm_set1_ps(0.0f);
-            __m128 WideWeight1 = _mm_set1_ps(0.0f);
-            __m128 WideWeight2 = _mm_set1_ps(0.0f);
-            __m128 WideWeight3 = _mm_set1_ps(0.0f);
             __m128 WideBetaWeight = _mm_set1_ps(0.0f);
         
             for(;
@@ -690,12 +685,24 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                                      (PrevLayerSize * (NeuronIndex+3)) +
                                      PrevNeuronIndex, WideWeightDx3);
 
+                        __m128 WideWeight0 = _mm_load_ps(Weights + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * (NeuronIndex+0)) +
+                                     PrevNeuronIndex);
+                        __m128 WideWeight1 = _mm_load_ps(Weights + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * (NeuronIndex+1)) +
+                                     PrevNeuronIndex);
+                        __m128 WideWeight2 = _mm_load_ps(Weights + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * (NeuronIndex+2)) +
+                                     PrevNeuronIndex);
+                        __m128 WideWeight3 = _mm_load_ps(Weights + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * (NeuronIndex+3)) +
+                                     PrevNeuronIndex);
+
                         WideWeight0 = _mm_add_ps(WideWeight0, WideWeightDx0);
                         WideWeight1 = _mm_add_ps(WideWeight1, WideWeightDx1);
                         WideWeight2 = _mm_add_ps(WideWeight2, WideWeightDx2);
                         WideWeight3 = _mm_add_ps(WideWeight3, WideWeightDx3);
-                        
-/*                        
+
                         _mm_store_ps(Weights + WeightsRowPtr[LayerIndex] +
                                      (PrevLayerSize * (NeuronIndex+0)) +
                                      PrevNeuronIndex,
@@ -712,7 +719,6 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                                      (PrevLayerSize * (NeuronIndex+3)) +
                                      PrevNeuronIndex,
                                      WideWeight3);
-*/
                     }
 
                     Assert(PrevNeuronIndex >= LayerSizes[LayerIndex-1]);
@@ -764,10 +770,7 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
             for(;
                 NeuronIndex < LayerSizes[LayerIndex];
                 ++NeuronIndex)
-            {
-
-                __m128 WideWeight = _mm_set1_ps(0.0f);
-                
+            {                
                 {
                     u32 PrevNeuronIndex = 0;
                     for(;
@@ -783,6 +786,10 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                                     (PrevLayerSize * NeuronIndex)
                                      + PrevNeuronIndex,
                                      WideWeightDx);
+
+                        __m128 WideWeight = _mm_load_ps(Weights + WeightsRowPtr[LayerIndex] +
+                                                        (PrevLayerSize * (NeuronIndex+0)) +
+                                                        PrevNeuronIndex);
 
                         WideWeight = _mm_add_ps(WideWeight, WideWeightDx);
 
@@ -809,3 +816,4 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
         }
 	}
 }
+    
