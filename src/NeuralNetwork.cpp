@@ -14,8 +14,8 @@
 #define UNROLLED 0
 #define SIMD 1
 
-#define DIGITS 1
-#define IRIS 0
+#define DIGITS 0
+#define IRIS 1
 #define XOR4 0
 #define XOR2 0
 
@@ -36,8 +36,8 @@
 #endif
 
 #if XOR4
-#define MAX_ITERATIONS 10000
-#define LAYERSIZES {4,4,1}
+#define MAX_ITERATIONS 100000
+#define LAYERSIZES {4,40,1}
 global r32 TrainingData[] = {
     0,0,0,0,0,
     0,0,0,1,1,

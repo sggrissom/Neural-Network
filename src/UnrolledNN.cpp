@@ -42,7 +42,6 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
         {
             ++PrevLayerSize;
         }
-            
         {
             u32 NeuronIndex = 0;
             for(;
@@ -577,7 +576,7 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                         Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+0) + PrevNeuronIndex + 3] +=
                             (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
                                                   PrevLayerSize * (NeuronIndex+0) + PrevNeuronIndex + 3];
-                        
+
                         Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+1) + PrevNeuronIndex] +=
                             (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
                                                   PrevLayerSize * (NeuronIndex+1) + PrevNeuronIndex];
