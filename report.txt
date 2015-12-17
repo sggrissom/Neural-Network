@@ -1,0 +1,37 @@
+
+Title Self explanatory.
+Improving Neural Network Performance on a CPU
+
+Author Self explanatory.
+Steven Grissom
+
+Abstract The abstract gives an overview of the entire work. It should state the purpose or central question of the project, state why it is important, give a brief statement of what was done, a brief statement of what was found, and a brief statement of what was concluded. It should be understandable without the reader needing to read the entire report. One good structure is to have five sentences, covering the following:
+
+
+The problem or question addressed.
+The reason(s) the problem or question is interesting and/or worth studying.
+The approach taken.
+The solution to the problem or answer to the question that you found.
+Conclusions that follow from what was found.
+
+Neural Networks are big complicated programs where the computations required increases exponentially. Utilizing techniques that are amenable to compiler improvements and using cpu resources that provided mean to do more work at once allow these programs to more efficiently utilize the resources they run on which then lends these programs more practicality for complex applications.
+
+Introduction The introduction covers the motivation, nature, and scope of the report. It also introduces the approach in broad terms, gives a broad overview of the results, and outlines key conclusions. It should include discussion of pertinent literature to help readers understand these elements. (How is your research similar to and different from other research in motivation, nature, scope, results, etc.?)
+
+
+Note that the introduction only introduces related work, your approach, your results, and your conclusions. You should cover these topics in greater depth later in your report.
+
+Approach/Methods
+
+You need to clearly state your approach starting broadly and then filling in details until your entire methodology becomes clear. This may include text, equations, figures, pseudo-code, or some combination of all of these. The level of detail should be sufficient for other researchers to reproduce your results and carry out your analyses without needing to look at or make use of your actual code. (Note that you will be submitting an electronic copy of your code. However, the code itself does not belong in the approach/methodology section of your report. It could be included as an appendix, which would mean that you would not need to turn in a separate copy of the code.)
+Results You need to summarize results from your experiments in your report. These should be thorough, so that your readers can analyze them and come to their own conclusions based on them. At the same time, these results should not be exhaustive. That is, they should not be the raw data but appropriate summaries of that data, such as medians, means, standard deviations, and results of statistical hypothesis tests run on the data. Tables and graphs are often appropriate ways to present summarized data but other summaries, such as text descriptions, may also be appropriate. Raw data may be included in an appendix.
+
+Discussion You need to discuss the results you have found. This includes comparing your data sets to one another, comparing your results to results published in the literature, and commenting on likely reasons for similarities and differences found.
+
+Conclusions You need to decide what is reasonable to conclude from your results and clearly state all such conclusions and the bases on which they rest.
+
+Future Work You need to suggest appropriate ways that your work could be built upon (by you or others). This could be anything from more experiments to help validate the conclusions to radical changes in approach.
+
+Bibliography You need to present a full set of citations for all works cited in your report. Do not include other related work that is not discussed in your report.
+
+Appendices If there is important information that you would like to include in your report that would impede the normal flow of the report if included elsewhere, it may be included in one or more appendices. In particular, code and/or raw data may be included in appendices or they may be submitted separately. Do not make duplicate submissions of these items, however.
