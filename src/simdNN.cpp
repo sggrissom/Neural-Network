@@ -60,11 +60,6 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
                 __m128 WideSum2 = _mm_set1_ps(0.0f);
                 r32 Sum3 = 0.0f;
                 __m128 WideSum3 = _mm_set1_ps(0.0f);
-                
-                r32 c0 = 0.0f;
-                r32 c1 = 0.0f;
-                r32 c2 = 0.0f;
-                r32 c3 = 0.0f;
 
                 {
                     u32 PrevNeuronIndex = 0;
@@ -120,7 +115,6 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
 
                 
                 _mm_store_ps(Data+DataRowPtr[LayerIndex]+(NeuronIndex), SigmoidResult);
-                
             }
             
 
@@ -148,6 +142,9 @@ FeedForward(neural_network *NeuralNetwork, r32 *DataPoint)
                 }
 
                 ALIGN r32 Result;
+
+                WideSum = _mm_hadd_ps(WideSum, WideSum);
+                WideSum = _mm_hadd_ps(WideSum, WideSum);
 
                 _mm_store_ps(&Result, WideSum);
 
@@ -328,6 +325,9 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
     r32 Alpha = NeuralNetwork->Alpha;
     r32 Beta = NeuralNetwork->Beta;
 
+    __m128 WideAlpha = _mm_set1_ps(Alpha);
+    __m128 WideBeta = _mm_set1_ps(Beta);
+
 /****************************************************************/
     
     {
@@ -421,11 +421,6 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                 r32 Sum3 = 0.0f;
                 __m128 WideSum3 = _mm_set1_ps(0.0f);
                 
-                r32 tc0 = 0.0f;
-                r32 tc1 = 0.0f;
-                r32 tc2 = 0.0f;
-                r32 tc3 = 0.0f;
-                
                 __m128 RemainingSum = _mm_set1_ps(0.0f);
                 
                 {
@@ -475,7 +470,7 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                     for(;
                         NextNeuronIndex < LayerSizes[LayerIndex+1];
                         ++NextNeuronIndex)
-                    {/*
+                    {
                         __m128 WideDelta = _mm_set1_ps(Delta[DataRowPtr[LayerIndex+1]+
                                                              NextNeuronIndex]);
 
@@ -485,35 +480,13 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                                                         (NeuronIndex));
 
                         RemainingSum = _mm_add_ps(RemainingSum, _mm_mul_ps(WideDelta, WideWeight));
-                        
-                        //PrintWide(RemainingSum);
-                        */
-                        
-                        printf("%.4f\n",
-                               Delta[DataRowPtr[LayerIndex+1]+NextNeuronIndex]);
-
-                        printf("%.4f %.4f %.4f %.4f\n",
-                               Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (CurrLayerSize)*NextNeuronIndex +
-                                       (NeuronIndex+0)],
-                               Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (CurrLayerSize)*NextNeuronIndex +
-                                       (NeuronIndex+1)],
-                               Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (CurrLayerSize)*NextNeuronIndex +
-                                       (NeuronIndex+2)],
-                               Weights[WeightsRowPtr[LayerIndex + 1] +
-                                    (CurrLayerSize)*NextNeuronIndex +
-                                       (NeuronIndex+3)]);
                     }
                 }
                 
                 __m128 WideSumTotal = _mm_add_ps(WideSum0, _mm_add_ps(WideSum1, _mm_add_ps(WideSum2, WideSum3)));
 
-                //WideSumTotal = _mm_add_ps(WideSumTotal, RemainingSum);
+                WideSumTotal = _mm_add_ps(WideSumTotal, RemainingSum);
                 
-                printf("\n----------------------\n");
-
                 __m128 WideData = _mm_load_ps(Data + DataRowPtr[LayerIndex] + NeuronIndex);
                 __m128 InvWideData = _mm_sub_ps(NegativeOne, WideData);
                 __m128 StoreValue = _mm_mul_ps(WideData, _mm_mul_ps(InvWideData, WideSumTotal));
@@ -526,6 +499,8 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
         }
     }
 
+
+    
 /****************************************************************/
 
 
@@ -551,58 +526,48 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                         PrevNeuronIndex+3 < LayerSizes[LayerIndex-1];
                         PrevNeuronIndex+=4)
                     {
-                        
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+0) + PrevNeuronIndex] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+0) + PrevNeuronIndex];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+0) + PrevNeuronIndex + 1] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+0) + PrevNeuronIndex + 1];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+0) + PrevNeuronIndex + 2] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+0) + PrevNeuronIndex + 2];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+0) + PrevNeuronIndex + 3] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+0) + PrevNeuronIndex + 3];
-                        
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+1) + PrevNeuronIndex] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+1) + PrevNeuronIndex];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+1) + PrevNeuronIndex + 1] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+1) + PrevNeuronIndex + 1];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+1) + PrevNeuronIndex + 2] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+1) + PrevNeuronIndex + 2];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+1) + PrevNeuronIndex + 3] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+1) + PrevNeuronIndex + 3];
-                        
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+2) + PrevNeuronIndex] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+2) + PrevNeuronIndex];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+2) + PrevNeuronIndex + 1] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+2) + PrevNeuronIndex + 1];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+2) + PrevNeuronIndex + 2] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+2) + PrevNeuronIndex + 2];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+2) + PrevNeuronIndex + 3] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+2) + PrevNeuronIndex + 3];
-                        
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+3) + PrevNeuronIndex] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+3) + PrevNeuronIndex];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+3) + PrevNeuronIndex + 1] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+3) + PrevNeuronIndex + 1];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+3) + PrevNeuronIndex + 2] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+3) + PrevNeuronIndex + 2];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * (NeuronIndex+3) + PrevNeuronIndex + 3] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * (NeuronIndex+3) + PrevNeuronIndex + 3];
+                        __m128 WideWeightDx0 = _mm_load_ps(WeightDelta +
+                                                          WeightsRowPtr[LayerIndex] +
+                                                          PrevLayerSize * (NeuronIndex+0) +
+                                                          PrevNeuronIndex);
+                        __m128 WideWeightDx1 = _mm_load_ps(WeightDelta +
+                                                          WeightsRowPtr[LayerIndex] +
+                                                          PrevLayerSize * (NeuronIndex+1) +
+                                                          PrevNeuronIndex);
+                        __m128 WideWeightDx2 = _mm_load_ps(WeightDelta +
+                                                          WeightsRowPtr[LayerIndex] +
+                                                          PrevLayerSize * (NeuronIndex+2) +
+                                                          PrevNeuronIndex);
+                        __m128 WideWeightDx3 = _mm_load_ps(WeightDelta +
+                                                          WeightsRowPtr[LayerIndex] +
+                                                          PrevLayerSize * (NeuronIndex+3) +
+                                                          PrevNeuronIndex);
+
+                        WideWeightDx0 = _mm_mul_ps(WideWeightDx0, WideAlpha);
+                        WideWeightDx1 = _mm_mul_ps(WideWeightDx1, WideAlpha);
+                        WideWeightDx2 = _mm_mul_ps(WideWeightDx2, WideAlpha);
+                        WideWeightDx3 = _mm_mul_ps(WideWeightDx3, WideAlpha);
+
+                        _mm_store_ps(Weights +
+                                     WeightsRowPtr[LayerIndex] +
+                                     PrevLayerSize * (NeuronIndex+0) +
+                                     PrevNeuronIndex,
+                                     WideWeightDx0);
+                        _mm_store_ps(Weights +
+                                     WeightsRowPtr[LayerIndex] +
+                                     PrevLayerSize * (NeuronIndex+1) +
+                                     PrevNeuronIndex,
+                                     WideWeightDx1);
+                        _mm_store_ps(Weights +
+                                     WeightsRowPtr[LayerIndex] +
+                                     PrevLayerSize * (NeuronIndex+2) +
+                                     PrevNeuronIndex,
+                                     WideWeightDx2);
+                        _mm_store_ps(Weights +
+                                     WeightsRowPtr[LayerIndex] +
+                                     PrevLayerSize * (NeuronIndex+3) +
+                                     PrevNeuronIndex,
+                                     WideWeightDx3);
                     }
                     
                     Assert(PrevNeuronIndex >= LayerSizes[LayerIndex-1]);
@@ -635,18 +600,19 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
                         PrevNeuronIndex+3 < LayerSizes[LayerIndex-1];
                         PrevNeuronIndex+=4)
                     {
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * NeuronIndex + PrevNeuronIndex] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * NeuronIndex + PrevNeuronIndex];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * NeuronIndex + PrevNeuronIndex + 1] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * NeuronIndex + PrevNeuronIndex + 1];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * NeuronIndex + PrevNeuronIndex + 2] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * NeuronIndex + PrevNeuronIndex + 2];
-                        Weights[WeightsRowPtr[LayerIndex] + PrevLayerSize * NeuronIndex + PrevNeuronIndex + 3] +=
-                            (Alpha) * WeightDelta[WeightsRowPtr[LayerIndex] +
-                                                  PrevLayerSize * NeuronIndex + PrevNeuronIndex + 3];
+                        
+                        __m128 WideWeightDx = _mm_load_ps(WeightDelta +
+                                                          WeightsRowPtr[LayerIndex] +
+                                                          PrevLayerSize * (NeuronIndex+0) +
+                                                          PrevNeuronIndex);
+
+                        WideWeightDx = _mm_mul_ps(WideWeightDx, WideAlpha);
+
+                        _mm_store_ps(Weights +
+                                     WeightsRowPtr[LayerIndex] +
+                                     PrevLayerSize * (NeuronIndex+0) +
+                                     PrevNeuronIndex,
+                                     WideWeightDx);
                     }
                     
                     Assert(PrevNeuronIndex >= LayerSizes[LayerIndex-1]);
@@ -673,218 +639,89 @@ BackPropogate(neural_network *NeuralNetwork, r32 *DataPoint, r32 *Target)
 
         {
             u32 NeuronIndex = 0;
+            
+            __m128 WideWeight0 = _mm_set1_ps(0.0f);
+            __m128 WideWeight1 = _mm_set1_ps(0.0f);
+            __m128 WideWeight2 = _mm_set1_ps(0.0f);
+            __m128 WideWeight3 = _mm_set1_ps(0.0f);
         
             for(;
                 NeuronIndex+3 < LayerSizes[LayerIndex];
                 NeuronIndex+=4)
             {
-
                 {
                     u32 PrevNeuronIndex = 0;
                     for(;
                         PrevNeuronIndex+3 < LayerSizes[LayerIndex-1];
                         PrevNeuronIndex+=4)
                     {
-                        
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * NeuronIndex)
-                                    + (PrevNeuronIndex+0)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+NeuronIndex] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+0)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * NeuronIndex)
-                                    + (PrevNeuronIndex+1)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+NeuronIndex] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+1)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * NeuronIndex)
-                                    + (PrevNeuronIndex+2)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+NeuronIndex] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+2)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * NeuronIndex)
-                                    + (PrevNeuronIndex+3)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+NeuronIndex] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+3)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * NeuronIndex) +
-                                (PrevNeuronIndex+0)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * NeuronIndex + (PrevNeuronIndex+0)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * NeuronIndex) +
-                                (PrevNeuronIndex+1)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * NeuronIndex + (PrevNeuronIndex+1)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * NeuronIndex) +
-                                (PrevNeuronIndex+2)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * NeuronIndex + (PrevNeuronIndex+2)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * NeuronIndex) +
-                                (PrevNeuronIndex+3)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * NeuronIndex + (PrevNeuronIndex+3)];
+                        __m128 WideDelta0 = _mm_set1_ps(Delta[DataRowPtr[LayerIndex] +
+                                                       NeuronIndex]);
+                        __m128 WideData = _mm_load_ps(Data +
+                                                      DataRowPtr[LayerIndex-1] +
+                                                      (PrevNeuronIndex));
 
+                        __m128 WideWeightDx0 = _mm_mul_ps(WideBeta, _mm_mul_ps(WideData, WideDelta0));
+
+                        _mm_store_ps(WeightDelta + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * NeuronIndex) +
+                                     PrevNeuronIndex, WideWeightDx0);
 
                         
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+1))
-                                    + (PrevNeuronIndex+0)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+1)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+0)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+1))
-                                    + (PrevNeuronIndex+1)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+1)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+1)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+1))
-                                    + (PrevNeuronIndex+2)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+1)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+2)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+1))
-                                    + (PrevNeuronIndex+3)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+1)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+3)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+1)) +
-                                (PrevNeuronIndex+0)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+1) + (PrevNeuronIndex+0)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+1)) +
-                                (PrevNeuronIndex+1)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+1) + (PrevNeuronIndex+1)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+1)) +
-                                (PrevNeuronIndex+2)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+1) + (PrevNeuronIndex+2)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+1)) +
-                                (PrevNeuronIndex+3)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+1) + (PrevNeuronIndex+3)];
 
+                        __m128 WideDelta1 = _mm_set1_ps(Delta[DataRowPtr[LayerIndex] +
+                                                        NeuronIndex+1]);
 
+                        __m128 WideWeightDx1 = _mm_mul_ps(WideBeta, _mm_mul_ps(WideData, WideDelta1));
+
+                        _mm_store_ps(WeightDelta + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * (NeuronIndex+1)) +
+                                     PrevNeuronIndex, WideWeightDx1);
 
                         
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+2))
-                                    + (PrevNeuronIndex+0)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+2)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+0)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+2))
-                                    + (PrevNeuronIndex+1)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+2)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+1)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+2))
-                                    + (PrevNeuronIndex+2)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+2)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+2)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+2))
-                                    + (PrevNeuronIndex+3)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+2)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+3)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+2)) +
-                                (PrevNeuronIndex+0)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+2) + (PrevNeuronIndex+0)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+2)) +
-                                (PrevNeuronIndex+1)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+2) + (PrevNeuronIndex+1)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+2)) +
-                                (PrevNeuronIndex+2)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+2) + (PrevNeuronIndex+2)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+2)) +
-                                (PrevNeuronIndex+3)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+2) + (PrevNeuronIndex+3)];
+                        __m128 WideDelta2 = _mm_set1_ps(Delta[DataRowPtr[LayerIndex] +
+                                                        NeuronIndex+2]);
 
+                        __m128 WideWeightDx2 = _mm_mul_ps(WideBeta, _mm_mul_ps(WideData, WideDelta2));
+
+                        _mm_store_ps(WeightDelta + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * (NeuronIndex+2)) +
+                                     PrevNeuronIndex, WideWeightDx2);
 
                         
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+3))
-                                    + (PrevNeuronIndex+0)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+3)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+0)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+3))
-                                    + (PrevNeuronIndex+1)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+3)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+1)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+3))
-                                    + (PrevNeuronIndex+2)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+3)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+2)];
-                
-                        WeightDelta[WeightsRowPtr[LayerIndex] +
-                                    (PrevLayerSize * (NeuronIndex+3))
-                                    + (PrevNeuronIndex+3)] =
-                            Beta * Delta[DataRowPtr[LayerIndex]+(NeuronIndex+3)] *
-                            Data[DataRowPtr[LayerIndex-1] + (PrevNeuronIndex+3)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+3)) +
-                                (PrevNeuronIndex+0)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+3) + (PrevNeuronIndex+0)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+3)) +
-                                (PrevNeuronIndex+1)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+3) + (PrevNeuronIndex+1)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+3)) +
-                                (PrevNeuronIndex+2)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+3) + (PrevNeuronIndex+2)];
-                
-                        Weights[WeightsRowPtr[LayerIndex] +
-                                (PrevLayerSize * (NeuronIndex+3)) +
-                                (PrevNeuronIndex+3)] +=
-                            WeightDelta[WeightsRowPtr[LayerIndex] +
-                                        PrevLayerSize * (NeuronIndex+3) + (PrevNeuronIndex+3)];
+                        __m128 WideDelta3 = _mm_set1_ps(Delta[DataRowPtr[LayerIndex] +
+                                                        NeuronIndex+3]);
 
+                        __m128 WideWeightDx3 = _mm_mul_ps(WideBeta, _mm_mul_ps(WideData, WideDelta3));
+
+                        _mm_store_ps(WeightDelta + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * (NeuronIndex+3)) +
+                                     PrevNeuronIndex, WideWeightDx3);
+
+                        
+                        WideWeight0 = _mm_add_ps(WideWeight0, WideWeightDx0);
+                        WideWeight1 = _mm_add_ps(WideWeight1, WideWeightDx1);
+                        WideWeight2 = _mm_add_ps(WideWeight2, WideWeightDx2);
+                        WideWeight3 = _mm_add_ps(WideWeight3, WideWeightDx3);
+                        
+/*                        
+                        _mm_store_ps(Weights + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * (NeuronIndex+0)) +
+                                     PrevNeuronIndex,
+                                     WideWeight0);
+                        _mm_store_ps(Weights + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * (NeuronIndex+1)) +
+                                     PrevNeuronIndex,
+                                     WideWeight1);
+                        _mm_store_ps(Weights + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * (NeuronIndex+2)) +
+                                     PrevNeuronIndex,
+                                     WideWeight2);
+                        _mm_store_ps(Weights + WeightsRowPtr[LayerIndex] +
+                                     (PrevLayerSize * (NeuronIndex+3)) +
+                                     PrevNeuronIndex,
+                                     WideWeight3);
+*/
                     }
 
                     Assert(PrevNeuronIndex >= LayerSizes[LayerIndex-1]);
