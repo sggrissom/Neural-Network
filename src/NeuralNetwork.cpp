@@ -10,15 +10,17 @@
 #define EPSILON 0.0001f
 #define TEST_ITERATIONS 1000
 
-#define MP 1
+#define MP 0
 
-#define FLAT 0
+#define FLAT 1
 #define UNROLLED 0
-#define SIMD 1
+#define SIMD 0
 
-#define DIGITS 0
+#define DIGITS 1
 #define IRIS 0
-#define XOR4 1
+#define XOR4 0
+
+#define FILEOUTPUT 0
 
 #if MP
 #define NETWORK_COUNT 4

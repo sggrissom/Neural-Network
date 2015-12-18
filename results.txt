@@ -1,0 +1,52 @@
+oop:
+xor:		18.621s		100%
+
+flat:
+xor		10.702s		100.00%
+iris		1.469s		92.65%
+digits		1.258s		91.01%
+
+unrolled	
+xor		7.337s		100.00%
+iris		1.116s		92.65%
+digits		0.970s		91.02%
+
+simd		
+xor		5.408s		100.00%
+iris		0.625s		92.65%
+digits		0.421s		91.01%
+
+O2
+oop:
+xor:		18.621s		100%
+
+flat:
+xor		2.181s		100.00%
+iris		0.304s		92.65%
+digits		0.248s		91.01%
+
+unrolled	
+xor		1.616s		100.00%
+iris		0.212s		92.65%
+digits		0.191s		91.44%
+
+simd		
+xor		1.323s		100.00%
+iris		0.073s		92.65%
+digits		0.055s		91.06%
+
+multicore	
+flat:
+xor		3.544s
+iris		0.512s
+digits		0.351s
+
+unrolled	
+xor		2.456s
+iris		0.361s
+digits		2.423s
+
+simd		
+xor		1.697s
+iris		0.212s
+digits		0.116s

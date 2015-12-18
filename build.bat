@@ -1,7 +1,7 @@
 @echo off
 
-set debug= 1
-set release= 0
+set debug= 0
+set release= 1
 
 set IgnoredWarnings= -wd4505 -wd4201 -wd4100 -wd4189
 set CommonCompilerFlags= -DSLOW=1 -DDEBUG=1 /openmp -I w:\slib -EHsc -nologo -Gm- -GR- -EHa- -Oi -WX -W4 -FC -Z7 %IgnoredWarnings%
