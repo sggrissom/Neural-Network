@@ -1,12 +1,8 @@
-
-Title Self explanatory.
+Title
 Improving Neural Network Performance on a CPU
 
-Author Self explanatory.
+Author
 Steven Grissom
-
-Abstract The abstract gives an overview of the entire work. It should state the purpose or central question of the project, state why it is important, give a brief statement of what was done, a brief statement of what was found, and a brief statement of what was concluded. It should be understandable without the reader needing to read the entire report. One good structure is to have five sentences, covering the following:
-
 
 The problem or question addressed.
 The reason(s) the problem or question is interesting and/or worth studying.
@@ -14,7 +10,7 @@ The approach taken.
 The solution to the problem or answer to the question that you found.
 Conclusions that follow from what was found.
 
-Neural Networks are big complicated programs where the computations required increases exponentially. Utilizing techniques that are amenable to compiler improvements and using cpu resources that provided mean to do more work at once allow these programs to more efficiently utilize the resources they run on which then lends these programs more practicality for complex applications.
+Neural Networks are big complicated programs where the computations required increases exponentially. Utilizing techniques that are amenable to compiler improvements and taking advantage of the cpu hardware allow these programs to more efficiently utilize the resources they run on which then lends these programs more practicality for complex applications. This can be accomplished by using cache coherant data structures, loop unrolling, and using SIMD instructions. Implementing these measures allows Neural Networks to compute much more rapidly, lending them much greater practicality for complex problems.
 
 Introduction The introduction covers the motivation, nature, and scope of the report. It also introduces the approach in broad terms, gives a broad overview of the results, and outlines key conclusions. It should include discussion of pertinent literature to help readers understand these elements. (How is your research similar to and different from other research in motivation, nature, scope, results, etc.?)
 
@@ -23,7 +19,19 @@ Note that the introduction only introduces related work, your approach, your res
 
 Approach/Methods
 
-You need to clearly state your approach starting broadly and then filling in details until your entire methodology becomes clear. This may include text, equations, figures, pseudo-code, or some combination of all of these. The level of detail should be sufficient for other researchers to reproduce your results and carry out your analyses without needing to look at or make use of your actual code. (Note that you will be submitting an electronic copy of your code. However, the code itself does not belong in the approach/methodology section of your report. It could be included as an appendix, which would mean that you would not need to turn in a separate copy of the code.)
+The process was started with a Neural Network Implementation in C++. This implementation was done with objects, multidimentional arrays, and double precision values. The first step in optimization is to transform the initial implementation into a more memory friendly version. The first step for this is to transpose the multidimentional arrays into one large array with the smaller arrays just components of the large array.
+
+This turns out to be an important step for performance because of a property called cache coherancy. Cache coherancy is desired because fetching data from main memory is incredibly slow and is often the bottleneck for highly optimized code. When a slow fetch is executed, a whole line of continguous memory is placed into the CPU's cache. Accessing the cache is slower than accessing a register, but much faster than accessing main memory. Since a line of continguous memory is brought in all at once it is highly efficient to do lots of comptations with memory that is stored contiguosly. That is what an Array is: a block of contiguous memory.
+
+The problem with multidimensional arrays is that it is functionaly an array of pointers to other arrays. Those arrays could be stored anywhere, they don't have to and probably aren't contiguous. To access a value you first have to access main memory to get the value of the pointer. Then you have to go back to main memory again to get the data the pointer is pointing to. And when you access another value you have to load a pointer to more memory again. All these extra memory operations aren't slow on their own, but each one goes into the cache which then flushes out the actual data to be operated on. These is called polluting the cache and it is undesirable in highly performant applications.
+
+Another transform is using single precision (float) instead of double precision (double). For many operations, including this neural network, the extra precision is wholey unnecessary. Yet it takes up twice as much memory, further polluting the cache and reducing throughput.
+
+The next improvment stage is to use a technique called loop unrolling. This is a technique to more explicitly write out several iterations of a for loop. This has performance implications mostly because of making more explicit the intentions of the loop. The compiler is able to more effectively reason about the relationship between the different iterations (ideally no relationship, but it may not know that without some unrolling). In addition the CPU itself is able to reorder assembly instructions if it knows the dependencies between them. If there could be pointer aliasing that the compiler or the CPU can't be assured of is impossible, then they are unable to make the optimizations. But by unrolling the loop explicitly then they should be more able to do so.
+
+The next stage for improvement is using SIMD, or Single Instruction, Multiple Data. Intel's implementation of this is called SSE, or S SIMD E. This are special instructions that use speical 128bit registers on the CPU. These registers can hold multiple values at once. In the case of floating point it can hold 4 values. Using these registers you can do 4 computations at the same time. Loop unrolling actually primes the code for converting to SIMD, because it's already doing operations on four values at a time.
+
+
 Results You need to summarize results from your experiments in your report. These should be thorough, so that your readers can analyze them and come to their own conclusions based on them. At the same time, these results should not be exhaustive. That is, they should not be the raw data but appropriate summaries of that data, such as medians, means, standard deviations, and results of statistical hypothesis tests run on the data. Tables and graphs are often appropriate ways to present summarized data but other summaries, such as text descriptions, may also be appropriate. Raw data may be included in an appendix.
 
 Discussion You need to discuss the results you have found. This includes comparing your data sets to one another, comparing your results to results published in the literature, and commenting on likely reasons for similarities and differences found.
