@@ -16,9 +16,11 @@
 #define UNROLLED 0
 #define SIMD 0
 
-#define DIGITS 0
-#define IRIS 1
+#define DIGITS 1
+#define IRIS 0
 #define XOR4 0
+
+#define FILEOUTPUT 0
 
 #if MP
 #define NETWORK_COUNT 4

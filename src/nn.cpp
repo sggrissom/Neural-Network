@@ -2,6 +2,12 @@
 #include <time.h>
 #include <math.h>
 #include <omp.h>
+#include <string.h>
+
+#include <fstream>
+#include <iostream>
+using std::cout;
+using std::endl;
 
 #include <slib.h>
 
@@ -14,6 +20,36 @@
 #elif SIMD
 #include "simdNN.cpp"
 #endif
+
+//	mean square error
+internal r32
+mse(neural_network *NeuralNetwork, r32 *tgt)
+{
+    u32 lsize[] = LAYERSIZES;
+    u32 numl = ArrayCount(lsize);
+    
+    
+    r32 mse=0;
+	for(u32 i=0;i<lsize[numl-1];i++){
+		mse+=(tgt[i]-
+              NeuralNetwork->Data[NeuralNetwork->DataRowPointer[numl-1] + i])*
+            (tgt[i]-
+             NeuralNetwork->Data[NeuralNetwork->DataRowPointer[numl-1] + i]);
+	}
+	return mse/2;
+}
+
+internal void
+CombineArrays(r32 *A, r32 *B, r32 *C, r32 *D, u32 Size)
+{
+    for(u32 ArrayIndex = 0;
+        ArrayIndex < Size;
+        ++ArrayIndex)
+    {
+        A[ArrayIndex] += B[ArrayIndex] + C[ArrayIndex] + D[ArrayIndex];
+        A[ArrayIndex] /= 4;
+    }
+}
 
 s32 main()
 {
@@ -56,6 +92,19 @@ s32 main()
     u32 TrainingDataPointCount = DataCount / (InputCount + OutputCount);
     u32 TrainDataPitch = InputCount + OutputCount;
 
+#if FILEOUTPUT
+    const char *filename = "output.csv";
+    const char *path_prefix = "../";
+    char OutputFilename[80];
+    strcpy_s(OutputFilename, path_prefix);
+    strcat_s(OutputFilename, filename);
+
+    printf("%s\n", OutputFilename);
+    
+    std::ofstream FileOutput;    
+    FileOutput.open(OutputFilename, std::ofstream::out);
+#endif
+
     clock_t startTime = clock();
 
 #pragma omp parallel num_threads(NETWORK_COUNT)
@@ -74,6 +123,11 @@ s32 main()
             r32 *DataPoint = &TrainingData[(IterationIndex%TrainingDataPointCount)*TrainDataPitch];
             r32 *Target = DataPoint + InputCount;
             BackPropogate(&NeuralNetwork[NetworkIndex], DataPoint, Target);
+            
+#if FILEOUTPUT
+            FileOutput << IterationIndex << ',' << mse(&NeuralNetwork[0], Target) << std::endl;
+#endif
+
         }
     }
 
@@ -111,6 +165,10 @@ s32 main()
     printf("Correct: %d\n", Correct);
     printf("Incorrect: %d\n", Incorrect);
     printf("Accuracy: %.2f%%\n", Accuracy*100);
+
+#if FILEOUTPUT
+    FileOutput.close();
+#endif
     
     return 1;
 }
