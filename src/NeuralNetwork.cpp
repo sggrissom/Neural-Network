@@ -10,18 +10,19 @@
 #define EPSILON 0.0001f
 #define TEST_ITERATIONS 1000
 
-#define MP 1
+#define MP 0
 
-#define FLAT 0
+#define FLAT 1
 #define UNROLLED 0
-#define SIMD 1
+#define SIMD 0
 
 #define DIGITS 0
-#define IRIS 0
-#define XOR4 1
+#define IRIS 1
+#define XOR4 0
 
 #if MP
 #define NETWORK_COUNT 4
+#define COMBINE_ITERATIONS 100
 #else
 #define NETWORK_COUNT 1
 #endif
@@ -36,14 +37,14 @@
 #endif
 
 #if IRIS
-#define MAX_ITERATIONS 1000
-#define LAYERSIZES {4,100,100,2}
+#define MAX_ITERATIONS 10000
+#define LAYERSIZES {4,1000,100,2}
 #define FILENAME "..\\src\\iris.data"
 #include "load.cpp"
 #endif
 
 #if XOR4
-#define MAX_ITERATIONS 100000
+#define MAX_ITERATIONS 500000
 #define LAYERSIZES {4,32,16,8,1}
 global r32 TrainingData[] = {
     0,0,0,0,0,

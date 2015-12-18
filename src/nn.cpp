@@ -15,18 +15,6 @@
 #include "simdNN.cpp"
 #endif
 
-internal void
-CombineArrays(r32 *A, r32 *B, r32 *C, r32 *D, u32 Size)
-{
-    for(u32 ArrayIndex = 0;
-        ArrayIndex < Size;
-        ++ArrayIndex)
-    {
-        A[ArrayIndex] += B[ArrayIndex] + C[ArrayIndex] + D[ArrayIndex];
-        A[ArrayIndex] /= 4;
-    }
-}
-
 s32 main()
 {
     srand(0);
@@ -74,6 +62,7 @@ s32 main()
     {
 #if MP
         u32 NetworkIndex = omp_get_thread_num();
+        u32 NeuronCount = NeuralNetwork[NetworkIndex].DataRowPointer[LayerCount];
 #else
         u32 NetworkIndex = 0;
 #endif
@@ -88,54 +77,11 @@ s32 main()
         }
     }
 
-#if MP
-    u32 NeuronCount = NeuralNetwork[0].DataRowPointer[LayerCount];
-    CombineArrays(NeuralNetwork[0].Data,
-                  NeuralNetwork[1].Data,
-                  NeuralNetwork[2].Data,
-                  NeuralNetwork[3].Data,
-                  NeuronCount);
-    CombineArrays(NeuralNetwork[0].Weights,
-                  NeuralNetwork[1].Weights,
-                  NeuralNetwork[2].Weights,
-                  NeuralNetwork[3].Weights,
-                  WeightCount);
-#endif
-
     clock_t endTime = clock();
     clock_t clockTicksTaken = endTime - startTime;
     r32 timeInSeconds = clockTicksTaken / (r32) CLOCKS_PER_SEC;
     
     printf("%.3f s\n", timeInSeconds);
-
-#if 0
-    for(u32 i=0;
-        i < TrainingDataPointCount;
-        ++i)
-	{
-		FeedForward(&NeuralNetwork,
-                    &TrainingData[i*TrainDataPitch]);
-		for(u32 j=0;
-             j < InputCount;
-             ++j)
-		{
-			r32 Value = TrainingData[i*(TrainDataPitch)+j];
-            printf("%f ", Value);
-		}
-
-        for(u32 j=0;
-            j < OutputCount;
-            ++j)
-        {
-            printf("Answer: %f\n", TrainingData[i * TrainDataPitch + InputCount + j]);
-            printf("Guess: %f\n\n", NeuralNetwork.Data[NeuralNetwork.DataRowPointer[LayerCount-1] + j]);
-        }
-        
-        printf("\n");
-	}
-    
-    printf("\n\n\n");
-#endif
 
     u32 Correct = 0;
     u32 Incorrect = 0;
